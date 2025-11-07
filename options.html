@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Settings</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="images/icon16.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="images/icon48.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="images/icon128.png">
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="content.css">
+    <script src="options.js"></script>
+</head>
+
+<body>
+    <h2>Provider Settings</h2>
+
+    <div class="form-row">
+        <label for="api-url">API URL:</label>
+        <input type="text" id="api-url" placeholder="https://api.example.com/v1">
+    </div>
+
+    <div class="form-row">
+        <label for="api-token">API Token:</label>
+        <input type="password" id="api-token" placeholder="your-api-token-here">
+    </div>
+
+    <div class="form-row">
+        <label for="model-name">Model:</label>
+        <div class="model-select-container">
+            <select id="model-name" class="model-select">
+                <option value="" disabled selected>Select a model</option>
+            </select>
+            <button id="get-models">Get Models</button>
+        </div>
+    </div>
+
+    <h2>UI Settings</h2>
+    <label>Menu Position (relative to cursor):</label>
+    <div class="menu-position-section">
+        <div class="menu-position-grid">
+            <label class="position-label">
+                <input type="radio" name="menu-position" value="top-left" class="position-radio">
+                <span class="arrow">&#8598;</span>
+            </label>
+            <label class="position-label">
+                <input type="radio" name="menu-position" value="top-center" class="position-radio">
+                <span class="arrow">&uarr;</span>
+            </label>
+            <label class="position-label">
+                <input type="radio" name="menu-position" value="top-right" class="position-radio">
+                <span class="arrow">&#8599;</span>
+            </label>
+            <label class="position-label">
+                <input type="radio" name="menu-position" value="middle-left" class="position-radio">
+                <span class="arrow">&larr;</span>
+            </label>
+            <label class="position-label">
+                <input type="radio" name="menu-position" value="middle-center" checked class="position-radio">
+                <span class="arrow">&#9679;</span>
+            </label>
+            <label class="position-label">
+                <input type="radio" name="menu-position" value="middle-right" class="position-radio">
+                <span class="arrow">&rarr;</span>
+            </label>
+            <label class="position-label">
+                <input type="radio" name="menu-position" value="bottom-left" class="position-radio">
+                <span class="arrow">&#8601;</span>
+            </label>
+            <label class="position-label">
+                <input type="radio" name="menu-position" value="bottom-center" class="position-radio">
+                <span class="arrow">&darr;</span>
+            </label>
+            <label class="position-label">
+                <input type="radio" name="menu-position" value="bottom-right" class="position-radio">
+                <span class="arrow">&#8600;</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <label>
+            <input type="checkbox" id="open-on-hover">
+            Open prompt list on hover
+        </label>
+    </div>
+
+    <div class="button-with-status">
+        <button id="save-settings">Save Settings</button>
+        <span id="settings-status-message" class="status-message"></span>
+    </div>
+
+    <h2>Prompts</h2>
+
+    <div id="prompts-list"></div>
+
+    <div>
+        <h2>Add New Prompt</h2>
+        <div class="form-row">
+            <label for="prompt-name">Prompt Name:</label>
+            <input type="text" id="prompt-name" placeholder="Enter prompt name">
+        </div>
+        <div class="form-row">
+            <label for="prompt-text">Prompt Text:</label>
+            <textarea id="prompt-text" rows="5" cols="50" placeholder="Enter prompt text"></textarea>
+        </div>
+        <div class="button-with-status">
+            <button id="add-prompt">Add Prompt</button>
+            <button id="cancel-edit" class="hidden">Cancel</button>
+            <span id="prompts-status-message" class="status-message"></span>
+        </div>
+    </div>
+</body>
+
+</html>

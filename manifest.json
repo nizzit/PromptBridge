@@ -1,0 +1,68 @@
+{
+    "manifest_version": 3,
+    "name": "PromptBridge",
+    "version": "1.0.1",
+    "description": "An extension to send selected text to a custom API provider using configurable prompts.",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage",
+        "contextMenus"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "images/icon16.png",
+            "48": "images/icon48.png",
+            "128": "images/icon128.png"
+        }
+    },
+    "icons": {
+        "16": "images/icon16.png",
+        "48": "images/icon48.png",
+        "128": "images/icon128.png"
+    },
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true
+    },
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "PromptBridge@nizzit",
+            "strict_min_version": "109.0",
+            "data_collection_permissions": {
+                "required": [
+                    "none"
+                ]
+            }
+        }
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "css": [
+                "content.css"
+            ]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "images/*.png"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ]
+}
