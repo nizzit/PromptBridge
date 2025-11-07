@@ -1,0 +1,448 @@
+:root {
+    --primary-color: #7B70E0;
+    --text-primary: #424242;
+    --text-white: #ffffff;
+    --bg-white: #ffffff;
+    --bg-light-gray: #f0f0f0;
+    --bg-medium-gray: #e0e0e0;
+    --border-color: #cccccc;
+    --hover-overlay: rgba(0,0,0,0.08);
+    --status-error: #ff5555;
+    --status-success: #2ecc71;
+    --status-info: #17a2b8;
+}
+
+/* Styles for standard HTML elements */
+
+/* Basic body styles */
+body {
+    background-color: #f5f5f5;
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+h1 {
+    font-size: 24px;
+    margin-top: 24px;
+}
+h2 {
+    font-size: 20px;
+    margin-top: 20px;
+}
+h3 { font-size: 18px; }
+h4 { font-size: 16px; }
+h5 { font-size: 14px; }
+h6 { font-size: 12px; }
+
+/* Paragraphs */
+p {
+    margin: 0 0 8px 0;
+    text-align: justify;
+}
+
+/* Buttons */
+button {
+    background-color: var(--primary-color);
+    color: var(--text-white);
+    border: 1px solid #6A5FD8;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+button:hover {
+    background-color: #6A5FD8;
+    border-color: #5A4FCC;
+}
+
+button:active {
+    background-color: #5A4FCC;
+    border-color: #4A3FB8;
+}
+
+button:disabled {
+    background-color: var(--bg-medium-gray);
+    border-color: var(--border-color);
+    color: #999999;
+    cursor: not-allowed;
+}
+
+/* Secondary buttons */
+button.secondary {
+    background-color: var(--bg-medium-gray);
+    border-color: #bdbdbd;
+    color: var(--text-primary);
+}
+
+button.secondary:hover {
+    background-color: #d0d0d0;
+    border-color: #a0a0a0;
+}
+
+/* Input fields */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="url"],
+textarea,
+select {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #bdbdbd;
+    border-radius: 6px;
+    background-color: var(--bg-white);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="url"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+input[type="text"]:disabled,
+input[type="email"]:disabled,
+input[type="password"]:disabled,
+input[type="number"]:disabled,
+input[type="url"]:disabled,
+textarea:disabled,
+select:disabled {
+    background-color: var(--bg-light-gray);
+    color: #999999;
+    cursor: not-allowed;
+    border-color: var(--border-color);
+}
+
+/* Checkboxes and radio buttons */
+input[type="checkbox"],
+input[type="radio"] {
+    margin-right: 8px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+}
+
+/* Align text relative to checkbox and radio */
+label:has(input[type="checkbox"]),
+label:has(input[type="radio"]) {
+    display: flex;
+    align-items: center;
+}
+
+/* Labels */
+label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Form groups */
+.form-group {
+    margin-bottom: 20px;
+}
+
+/* Horizontal form layout (label on the left) */
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.form-row label {
+    min-width: 100px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.form-row input,
+.form-row textarea,
+.form-row select,
+.form-row .model-select-container {
+    flex: 1;
+}
+
+/* Containers and articles */
+.container,
+article {
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* Positioning for buttons in article */
+article {
+    position: relative;
+}
+
+/* Container for buttons in article */
+article button {
+    position: absolute;
+    top: 10px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* First button (Edit) */
+article button:first-of-type {
+    right: 85px;
+}
+
+/* Second button (Delete) */
+article button:nth-of-type(2) {
+    right: 10px;
+}
+
+/* Show buttons on article hover */
+article:hover button {
+    opacity: 1;
+}
+
+
+/* Lists */
+ul, ol {
+    margin: 0 0 16px 0;
+    padding-left: 24px;
+}
+
+li {
+    margin-bottom: 8px;
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: #6A5FD8;
+    text-decoration: underline;
+}
+
+/* Code */
+code {
+    background-color: var(--bg-light-gray);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+}
+
+pre {
+    background-color: var(--bg-light-gray);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px;
+    overflow-x: auto;
+    margin: 0 0 16px 0;
+}
+
+pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+}
+
+th, td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    background-color: var(--bg-light-gray);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* HR */
+hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 20px 0;
+}
+
+/* Styles for options.html */
+
+/* Model selection container */
+.model-select-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Centering the Menu Position section */
+.menu-position-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.menu-position-section > label {
+    margin-bottom: 10px;
+}
+
+.model-select {
+    flex: 1;
+}
+
+/* Menu position grid */
+.menu-position-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 40px);
+    gap: 6px;
+    margin: 10px 0;
+}
+
+/* Label for positions */
+.position-label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: var(--bg-medium-gray);
+    border: 1px solid #bdbdbd;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    user-select: none;
+}
+
+.position-label:hover {
+    background-color: #d0d0d0;
+    border-color: #a0a0a0;
+}
+
+.position-label:active {
+    background-color: #c0c0c0;
+}
+
+/* Arrow inside the button */
+.position-label .arrow {
+    font-size: 16px;
+    color: var(--text-primary);
+    transition: color 0.2s ease;
+}
+
+/* Radio buttons for positions - hide the standard input */
+.position-radio {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* Style for the selected button */
+.position-label:has(.position-radio:checked) {
+    background-color: var(--primary-color);
+    border-color: #6A5FD8;
+}
+
+.position-label:has(.position-radio:checked):hover {
+    background-color: #6A5FD8;
+    border-color: #5A4FCC;
+}
+
+.position-label:has(.position-radio:checked):active {
+    background-color: #5A4FCC;
+    border-color: #4A3FB8;
+}
+
+.position-label:has(.position-radio:checked) .arrow {
+    color: var(--text-white);
+}
+
+/* Hidden element */
+.hidden {
+    display: none;
+}
+
+/* Container for button with status */
+.button-with-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Status message */
+.status-message {
+    font-size: 14px;
+    font-weight: 500;
+    min-height: 20px;
+}
+
+/* Popup header styles */
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    margin: 0;
+}
+
+.extension-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+/* Center settings button */
+#openSettings {
+    display: block;
+    margin: 0 auto;
+}
