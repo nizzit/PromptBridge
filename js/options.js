@@ -45,10 +45,21 @@ function loadSettings() {
 
         if (result.modelName) {
             // If there's a saved model, show it in the disabled select
-            modelSelect.innerHTML = `<option value="${result.modelName}" selected>${result.modelName}</option>`;
+            modelSelect.innerHTML = '';
+            const option = document.createElement('option');
+            option.value = result.modelName;
+            option.textContent = result.modelName;
+            option.selected = true;
+            modelSelect.appendChild(option);
         } else {
             // If no saved model, show placeholder
-            modelSelect.innerHTML = '<option value="" disabled selected>Select a model</option>';
+            modelSelect.innerHTML = '';
+            const option = document.createElement('option');
+            option.value = '';
+            option.disabled = true;
+            option.selected = true;
+            option.textContent = 'Select a model';
+            modelSelect.appendChild(option);
         }
 
         // Load menu position setting (default to middle-center)
@@ -152,7 +163,12 @@ async function fetchModels() {
         const currentModelName = modelSelect.value;
 
         // Populate model dropdown
-        modelSelect.innerHTML = '<option value="" disabled>Select a model</option>';
+        modelSelect.innerHTML = '';
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.disabled = true;
+        placeholderOption.textContent = 'Select a model';
+        modelSelect.appendChild(placeholderOption);
 
         // Sort models alphabetically by id
         const sortedModels = data.data.sort((a, b) => a.id.localeCompare(b.id));
@@ -223,7 +239,10 @@ function displayPrompts(prompts) {
     promptsList.innerHTML = '';
 
     if (prompts.length === 0) {
-        promptsList.innerHTML = '<p>No prompts saved yet.</p>';
+        promptsList.innerHTML = '';
+        const noPara = document.createElement('p');
+        noPara.textContent = 'No prompts saved yet.';
+        promptsList.appendChild(noPara);
         return;
     }
 

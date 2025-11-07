@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "PromptBridge",
-    "version": "0.1",
+    "version": "0.1.1",
     "author": "Anton Brazhnikov",
     "homepage_url": "https://github.com/nizzit/PromptBridge",
     "description": "An extension to send selected text to a custom API provider using configurable prompts.",
@@ -30,6 +30,16 @@
     },
     "background": {
         "service_worker": "js/background.js"
+    },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "PromptBridge@nizzit",
+            "data_collection_permissions": {
+                "required": [
+                    "none"
+                ]
+            }
+        }
     },
     "content_scripts": [
         {
