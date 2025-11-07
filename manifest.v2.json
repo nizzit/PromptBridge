@@ -36,7 +36,12 @@
     },
     "browser_specific_settings": {
         "gecko": {
-            "id": "PromptBridge@nizzit"
+            "id": "PromptBridge@nizzit",
+            "data_collection_permissions": {
+                "required": [
+                    "none"
+                ]
+            }
         }
     },
     "content_scripts": [
