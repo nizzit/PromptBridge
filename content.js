@@ -275,7 +275,7 @@ function calculateOverlayPosition() {
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
 
-    // Overlay width (as defined below)
+    // Overlay width (will be set by CSS, default is 500px)
     const overlayWidth = 500;
     const padding = 10; // Padding from edges
     const offsetY = 10; // Offset below selected text
@@ -300,6 +300,41 @@ function calculateOverlayPosition() {
     }
 
     return { x, y };
+}
+
+// Function to set optimal overlay size based on content
+function setOptimalOverlaySize() {
+    if (!resultOverlay) return;
+
+    const content = resultOverlay.querySelector('.overlay-content');
+    if (!content) return;
+
+    // Temporarily set max dimensions to measure content
+    resultOverlay.style.width = 'auto';
+    resultOverlay.style.maxWidth = '500px';
+    content.style.maxHeight = 'none';
+
+    // Get the natural content size
+    const contentWidth = content.scrollWidth;
+    const contentHeight = content.scrollHeight;
+
+    // Get header height
+    const header = resultOverlay.querySelector('.overlay-header');
+    const headerHeight = header ? header.offsetHeight : 0;
+    const padding = 16; // 8px padding on each side
+
+    // Calculate ideal dimensions with limits for initial display
+    let idealWidth = Math.min(contentWidth + padding + 20, 500); // +20 for potential scrollbar
+    let idealHeight = Math.min(contentHeight + headerHeight + padding, 600);
+
+    // Apply minimum constraints
+    idealWidth = Math.max(idealWidth, 200);
+    idealHeight = Math.max(idealHeight, 100);
+
+    // Set the calculated size
+    resultOverlay.style.width = `${idealWidth}px`;
+    resultOverlay.style.height = `${idealHeight}px`;
+    resultOverlay.style.maxWidth = 'none';
 }
 
 // Function to adjust overlay position if it goes beyond viewport bottom
@@ -336,7 +371,6 @@ function createOverlayContainer() {
     resultOverlay.className = 'result-overlay';
     resultOverlay.style.left = `${position.x}px`;
     resultOverlay.style.top = `${position.y}px`;
-    resultOverlay.style.width = '500px';
     return resultOverlay;
 }
 
@@ -376,11 +410,6 @@ function assembleAndAddOverlay(header, content) {
     resultOverlay.appendChild(header);
     resultOverlay.appendChild(content);
     document.body.appendChild(resultOverlay);
-
-    // Adjust position after adding to DOM when browser calculated sizes
-    requestAnimationFrame(() => {
-        adjustOverlayPosition();
-    });
 }
 
 // Function to create result overlay
@@ -391,6 +420,12 @@ function createResultOverlay(text) {
     const content = createOverlayContent(text);
     addDragFunctionality(header);
     assembleAndAddOverlay(header, content);
+
+    // Calculate optimal size based on content
+    requestAnimationFrame(() => {
+        setOptimalOverlaySize();
+        adjustOverlayPosition();
+    });
 }
 
 // Function to remove result overlay
