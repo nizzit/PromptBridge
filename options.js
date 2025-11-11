@@ -1,6 +1,10 @@
 // Editing state
 let editingIndex = null;
 
+// Default result window size
+const DEFAULT_RESULT_WIDTH = 500;
+const DEFAULT_RESULT_HEIGHT = 600;
+
 // Utility function to get storage API
 function getStorage() {
     return typeof browser !== 'undefined' ? browser.storage : chrome.storage;
@@ -34,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Load settings function
 function loadSettings() {
     const storage = getStorage();
-    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover'], function (result) {
+    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'resultWidth', 'resultHeight'], function (result) {
         if (result.apiUrl) {
             document.getElementById('api-url').value = result.apiUrl;
         }
@@ -71,6 +75,12 @@ function loadSettings() {
         // Load open on hover setting (default to false)
         const openOnHover = result.openOnHover || false;
         document.getElementById('open-on-hover').checked = openOnHover;
+
+        // Load result window size settings
+        const resultWidth = result.resultWidth || DEFAULT_RESULT_WIDTH;
+        const resultHeight = result.resultHeight || DEFAULT_RESULT_HEIGHT;
+        document.getElementById('result-width').value = resultWidth;
+        document.getElementById('result-height').value = resultHeight;
     });
 }
 
@@ -81,6 +91,8 @@ function saveSettings() {
     const modelName = document.getElementById('model-name').value;
     const menuPosition = document.querySelector('input[name="menu-position"]:checked')?.value || 'middle-center';
     const openOnHover = document.getElementById('open-on-hover').checked;
+    const resultWidth = parseInt(document.getElementById('result-width').value) || DEFAULT_RESULT_WIDTH;
+    const resultHeight = parseInt(document.getElementById('result-height').value) || DEFAULT_RESULT_HEIGHT;
 
     // Validation
     if (!apiUrl || !apiToken || !modelName) {
@@ -95,7 +107,9 @@ function saveSettings() {
         apiToken: apiToken,
         modelName: modelName,
         menuPosition: menuPosition,
-        openOnHover: openOnHover
+        openOnHover: openOnHover,
+        resultWidth: resultWidth,
+        resultHeight: resultHeight
     }, function () {
         // Check for errors (Chrome)
         const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
