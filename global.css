@@ -447,10 +447,20 @@ hr {
     margin: 0 auto;
 }
 
-/* Narrow input for number fields */
-.narrow-input {
-    max-width: 100px;
-    flex: 0 0 auto !important;
-    text-align: right;
+/* Align element to the right in flex container */
+.align-right {
     margin-left: auto;
+    flex: 0 0 auto !important;
+}
+
+/* Additional styles for text inputs with align-right class */
+input[type="text"].align-right,
+input[type="email"].align-right,
+input[type="password"].align-right,
+input[type="number"].align-right,
+input[type="url"].align-right,
+textarea.align-right,
+select.align-right {
+    max-width: 100px;
+    text-align: right;
 }
