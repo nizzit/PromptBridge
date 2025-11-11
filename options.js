@@ -91,12 +91,43 @@ function saveSettings() {
     const modelName = document.getElementById('model-name').value;
     const menuPosition = document.querySelector('input[name="menu-position"]:checked')?.value || 'middle-center';
     const openOnHover = document.getElementById('open-on-hover').checked;
-    const resultWidth = parseInt(document.getElementById('result-width').value) || DEFAULT_RESULT_WIDTH;
-    const resultHeight = parseInt(document.getElementById('result-height').value) || DEFAULT_RESULT_HEIGHT;
+
+    const resultWidthInput = document.getElementById('result-width');
+    const resultHeightInput = document.getElementById('result-height');
+    const resultWidthValue = resultWidthInput.value;
+    const resultHeightValue = resultHeightInput.value;
 
     // Validation
     if (!apiUrl || !apiToken || !modelName) {
         showStatus('All fields are required!', 'red', 'settings');
+        return;
+    }
+
+    // Validate result width
+    const resultWidth = parseInt(resultWidthValue);
+    const widthMin = parseInt(resultWidthInput.min);
+    const widthMax = parseInt(resultWidthInput.max);
+
+    if (isNaN(resultWidth) || resultWidth <= 0) {
+        showStatus('Width must be a positive number!', 'red', 'settings');
+        return;
+    }
+    if (resultWidth < widthMin || resultWidth > widthMax) {
+        showStatus(`Width must be between ${widthMin} and ${widthMax} pixels!`, 'red', 'settings');
+        return;
+    }
+
+    // Validate result height
+    const resultHeight = parseInt(resultHeightValue);
+    const heightMin = parseInt(resultHeightInput.min);
+    const heightMax = parseInt(resultHeightInput.max);
+
+    if (isNaN(resultHeight) || resultHeight <= 0) {
+        showStatus('Height must be a positive number!', 'red', 'settings');
+        return;
+    }
+    if (resultHeight < heightMin || resultHeight > heightMax) {
+        showStatus(`Height must be between ${heightMin} and ${heightMax} pixels!`, 'red', 'settings');
         return;
     }
 
