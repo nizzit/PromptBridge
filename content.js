@@ -266,7 +266,7 @@ function onMouseUp() {
 }
 
 // Function to calculate overlay position based on selected text
-function calculateOverlayPosition() {
+function calculateOverlayPosition(overlayWidth) {
     const selection = window.getSelection();
     if (!selection.rangeCount) {
         return { x: lastMouseX + window.scrollX, y: lastMouseY + window.scrollY };
@@ -275,8 +275,7 @@ function calculateOverlayPosition() {
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
 
-    // Overlay width (as defined below)
-    const overlayWidth = 500;
+    // Overlay width from settings
     const padding = 10; // Padding from edges
     const offsetY = 10; // Offset below selected text
 
@@ -300,6 +299,41 @@ function calculateOverlayPosition() {
     }
 
     return { x, y };
+}
+
+// Function to set optimal overlay size based on content
+function setOptimalOverlaySize(maxWidth, maxHeight) {
+    if (!resultOverlay) return;
+
+    const content = resultOverlay.querySelector('.overlay-content');
+    if (!content) return;
+
+    // Temporarily set max dimensions to measure content
+    resultOverlay.style.width = 'auto';
+    resultOverlay.style.maxWidth = `${maxWidth}px`;
+    content.style.maxHeight = 'none';
+
+    // Get the natural content size
+    const contentWidth = content.scrollWidth;
+    const contentHeight = content.scrollHeight;
+
+    // Get header height
+    const header = resultOverlay.querySelector('.overlay-header');
+    const headerHeight = header ? header.offsetHeight : 0;
+    const padding = 16; // 8px padding on each side
+
+    // Calculate ideal dimensions with limits for initial display
+    let idealWidth = Math.min(contentWidth + padding + 20, maxWidth); // +20 for potential scrollbar
+    let idealHeight = Math.min(contentHeight + headerHeight + padding, maxHeight);
+
+    // Apply minimum constraints
+    idealWidth = Math.max(idealWidth, 200);
+    idealHeight = Math.max(idealHeight, 100);
+
+    // Set the calculated size
+    resultOverlay.style.width = `${idealWidth}px`;
+    resultOverlay.style.height = `${idealHeight}px`;
+    resultOverlay.style.maxWidth = 'none';
 }
 
 // Function to adjust overlay position if it goes beyond viewport bottom
@@ -330,13 +364,12 @@ function adjustOverlayPosition() {
 }
 
 // Function to create overlay container
-function createOverlayContainer() {
-    const position = calculateOverlayPosition();
+function createOverlayContainer(overlayWidth) {
+    const position = calculateOverlayPosition(overlayWidth);
     resultOverlay = document.createElement('div');
     resultOverlay.className = 'result-overlay';
     resultOverlay.style.left = `${position.x}px`;
     resultOverlay.style.top = `${position.y}px`;
-    resultOverlay.style.width = '500px';
     return resultOverlay;
 }
 
@@ -376,21 +409,30 @@ function assembleAndAddOverlay(header, content) {
     resultOverlay.appendChild(header);
     resultOverlay.appendChild(content);
     document.body.appendChild(resultOverlay);
-
-    // Adjust position after adding to DOM when browser calculated sizes
-    requestAnimationFrame(() => {
-        adjustOverlayPosition();
-    });
 }
 
 // Function to create result overlay
 function createResultOverlay(text) {
     removeResultOverlay();
-    const overlayContainer = createOverlayContainer();
-    const header = createOverlayHeader();
-    const content = createOverlayContent(text);
-    addDragFunctionality(header);
-    assembleAndAddOverlay(header, content);
+
+    // Load overlay size settings
+    const storage = getStorage();
+    storage.sync.get(['resultWidth', 'resultHeight'], function (result) {
+        const resultWidth = result.resultWidth;
+        const resultHeight = result.resultHeight;
+
+        const overlayContainer = createOverlayContainer(resultWidth);
+        const header = createOverlayHeader();
+        const content = createOverlayContent(text);
+        addDragFunctionality(header);
+        assembleAndAddOverlay(header, content);
+
+        // Calculate optimal size based on content
+        requestAnimationFrame(() => {
+            setOptimalOverlaySize(resultWidth, resultHeight);
+            adjustOverlayPosition();
+        });
+    });
 }
 
 // Function to remove result overlay
