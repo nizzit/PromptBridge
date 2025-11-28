@@ -98,9 +98,25 @@ function togglePromptButtons() {
     const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
     const isVisible = promptButtons[0]?.style.display !== 'none';
 
-    promptButtons.forEach(button => {
-        button.style.display = isVisible ? 'none' : 'block';
-    });
+    if (isVisible) {
+        // Hide with animation
+        promptButtons.forEach(button => {
+            button.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+        });
+
+        setTimeout(() => {
+            promptButtons.forEach(button => {
+                button.style.display = 'none';
+                button.style.animation = ''; // Reset animation
+            });
+        }, 200);
+    } else {
+        // Show with animation
+        promptButtons.forEach(button => {
+            button.style.display = 'block';
+            button.style.animation = 'fadeInButton 0.2s ease-out forwards';
+        });
+    }
 }
 
 // Function to calculate menu position based on user preference
@@ -205,14 +221,23 @@ function createSelectionMenu(x, y) {
                 const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
                 promptButtons.forEach(button => {
                     button.style.display = 'block';
+                    button.style.animation = 'fadeInButton 0.2s ease-out forwards';
                 });
             });
 
             selectionMenu.addEventListener('mouseleave', function () {
                 const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
                 promptButtons.forEach(button => {
-                    button.style.display = 'none';
+                    button.style.animation = 'fadeOutButton 0.2s ease-out forwards';
                 });
+
+                setTimeout(() => {
+                    const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
+                    promptButtons.forEach(button => {
+                        button.style.display = 'none';
+                        button.style.animation = ''; // Reset animation
+                    });
+                }, 200);
             });
         }
 
@@ -245,8 +270,16 @@ function createSelectionMenu(x, y) {
 // Function to remove selection menu
 function removeSelectionMenu() {
     if (selectionMenu) {
-        document.body.removeChild(selectionMenu);
-        selectionMenu = null;
+        // Apply fade out animation
+        selectionMenu.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+
+        // Wait for animation to complete before removing
+        setTimeout(() => {
+            if (selectionMenu && selectionMenu.parentNode) {
+                document.body.removeChild(selectionMenu);
+                selectionMenu = null;
+            }
+        }, 200); // Match animation duration
     }
 }
 
@@ -438,8 +471,16 @@ function createResultOverlay(text) {
 // Function to remove result overlay
 function removeResultOverlay() {
     if (resultOverlay) {
-        document.body.removeChild(resultOverlay);
-        resultOverlay = null;
+        // Apply fade out animation
+        resultOverlay.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+
+        // Wait for animation to complete before removing
+        setTimeout(() => {
+            if (resultOverlay && resultOverlay.parentNode) {
+                document.body.removeChild(resultOverlay);
+                resultOverlay = null;
+            }
+        }, 200); // Match animation duration
     }
 }
 
@@ -453,6 +494,11 @@ document.addEventListener('mouseup', function (event) {
 
     // If clicked on menu, don't recreate it
     if (selectionMenu && selectionMenu.contains(event.target)) {
+        return;
+    }
+
+    // If clicked on result overlay, don't recreate menu
+    if (resultOverlay && resultOverlay.contains(event.target)) {
         return;
     }
 
