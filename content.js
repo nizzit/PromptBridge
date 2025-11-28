@@ -98,9 +98,25 @@ function togglePromptButtons() {
     const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
     const isVisible = promptButtons[0]?.style.display !== 'none';
 
-    promptButtons.forEach(button => {
-        button.style.display = isVisible ? 'none' : 'block';
-    });
+    if (isVisible) {
+        // Hide with animation
+        promptButtons.forEach(button => {
+            button.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+        });
+
+        setTimeout(() => {
+            promptButtons.forEach(button => {
+                button.style.display = 'none';
+                button.style.animation = ''; // Reset animation
+            });
+        }, 200);
+    } else {
+        // Show with animation
+        promptButtons.forEach(button => {
+            button.style.display = 'block';
+            button.style.animation = 'fadeInButton 0.2s ease-out forwards';
+        });
+    }
 }
 
 // Function to calculate menu position based on user preference
@@ -205,14 +221,23 @@ function createSelectionMenu(x, y) {
                 const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
                 promptButtons.forEach(button => {
                     button.style.display = 'block';
+                    button.style.animation = 'fadeInButton 0.2s ease-out forwards';
                 });
             });
 
             selectionMenu.addEventListener('mouseleave', function () {
                 const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
                 promptButtons.forEach(button => {
-                    button.style.display = 'none';
+                    button.style.animation = 'fadeOutButton 0.2s ease-out forwards';
                 });
+
+                setTimeout(() => {
+                    const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
+                    promptButtons.forEach(button => {
+                        button.style.display = 'none';
+                        button.style.animation = ''; // Reset animation
+                    });
+                }, 200);
             });
         }
 
