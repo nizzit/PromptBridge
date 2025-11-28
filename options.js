@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Load saved settings when opening the page
     loadSettings();
     loadPrompts();
+    loadVersion();
 
     // Save settings handler
     saveButton.addEventListener('click', saveSettings);
@@ -323,6 +324,7 @@ function displayPrompts(prompts) {
         promptArticle.appendChild(headerDiv);
 
         const textPara = document.createElement('p');
+        textPara.className = 'prompt-text';
         textPara.textContent = prompt.text;
         promptArticle.appendChild(textPara);
 
@@ -537,4 +539,24 @@ function importSettings(event) {
     };
 
     reader.readAsText(file);
+}
+
+// Load and display version from manifest
+function loadVersion() {
+    // Fetch manifest.json to get version
+    fetch(chrome.runtime.getURL('manifest.json'))
+        .then(response => response.json())
+        .then(manifest => {
+            const versionElement = document.getElementById('version-info');
+            if (versionElement) {
+                versionElement.textContent = `Version ${manifest.version}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading version:', error);
+            const versionElement = document.getElementById('version-info');
+            if (versionElement) {
+                versionElement.textContent = 'Version: N/A';
+            }
+        });
 }

@@ -46,7 +46,7 @@
 
 .overlay-content {
     padding: 8px;
-    white-space: pre-wrap;
+    white-space: normal;
     overflow-y: auto;
     overflow-x: auto;
     color: var(--text-primary);
@@ -55,6 +55,134 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     max-height: 100%;
+}
+
+/* Markdown elements styling */
+.overlay-content h1,
+.overlay-content h2,
+.overlay-content h3 {
+    margin: 16px 0 8px 0;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-primary);
+}
+
+.overlay-content h1 {
+    font-size: 24px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 8px;
+}
+
+.overlay-content h2 {
+    font-size: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 6px;
+}
+
+.overlay-content h3 {
+    font-size: 18px;
+}
+
+.overlay-content h1:first-child,
+.overlay-content h2:first-child,
+.overlay-content h3:first-child {
+    margin-top: 0;
+}
+
+.overlay-content strong {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.overlay-content em {
+    font-style: italic;
+}
+
+.overlay-content del {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.overlay-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    border-bottom: 1px solid var(--primary-color);
+}
+
+.overlay-content a:hover {
+    background-color: rgba(123, 112, 224, 0.1);
+}
+
+.overlay-content code {
+    background-color: var(--bg-light-gray);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    color: #d63384;
+}
+
+.overlay-content pre {
+    background-color: var(--bg-light-gray);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px;
+    overflow-x: auto;
+    margin: 12px 0;
+}
+
+.overlay-content pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.overlay-content ul,
+.overlay-content ol {
+    margin: 12px 0;
+    padding-left: 24px;
+}
+
+.overlay-content li {
+    margin: 4px 0;
+    line-height: 1.6;
+}
+
+.overlay-content ul {
+    list-style-type: disc;
+}
+
+.overlay-content ol {
+    list-style-type: decimal;
+}
+
+.overlay-content blockquote {
+    border-left: 4px solid var(--primary-color);
+    padding-left: 12px;
+    margin: 12px 0;
+    color: #666;
+    font-style: italic;
+    background-color: var(--bg-light-gray);
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+}
+
+.overlay-content hr {
+    border: none;
+    border-top: 2px solid var(--border-color);
+    margin: 16px 0;
+}
+
+.overlay-content br {
+    display: block;
+    margin: 4px 0;
+    content: "";
+}
+
+.overlay-content p {
+    margin: 8px 0;
 }
 
 .prompt-menu {

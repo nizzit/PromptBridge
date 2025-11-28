@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "PromptBridge",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "An extension to send selected text to a custom API provider using configurable prompts.",
     "permissions": [
         "activeTab",
@@ -48,6 +48,7 @@
                 "<all_urls>"
             ],
             "js": [
+                "markdown-parser.js",
                 "content.js"
             ],
             "css": [

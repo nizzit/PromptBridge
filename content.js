@@ -464,7 +464,8 @@ function createOverlayHeader() {
 function createOverlayContent(text) {
     const content = document.createElement('div');
     content.className = 'overlay-content';
-    content.textContent = text;
+    // Parse markdown and set as HTML
+    content.innerHTML = parseMarkdown(text);
     return content;
 }
 
