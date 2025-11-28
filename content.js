@@ -115,6 +115,39 @@ async function handlePromptSelection(prompt, selectedText, storage, button, orig
         console.error('Error:', error);
     }
 }
+// Utility function to create a positioned container
+function createPositionedContainer(className, x, y) {
+    const container = document.createElement('div');
+    container.className = className;
+    container.style.left = `${x}px`;
+    container.style.top = `${y}px`;
+    return container;
+}
+
+// Utility function to create a styled button
+function createStyledButton(text, className, additionalClasses = []) {
+    const button = document.createElement('button');
+    button.textContent = text;
+    button.className = [className, ...additionalClasses].join(' ');
+    return button;
+}
+
+// Utility function to remove element with fade-out animation
+function removeElementWithFadeOut(element, callback = null) {
+    if (!element) return;
+
+    // Apply fade out animation
+    element.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+
+    // Wait for animation to complete before removing
+    setTimeout(() => {
+        if (element && element.parentNode) {
+            document.body.removeChild(element);
+            if (callback) callback();
+        }
+    }, 200); // Match animation duration
+}
+
 
 // Function to toggle prompt buttons visibility
 function togglePromptButtons() {
@@ -227,15 +260,10 @@ function createSelectionMenu(x, y) {
         const position = calculateMenuPosition(x, y, menuPosition);
 
         // Create menu container
-        selectionMenu = document.createElement('div');
-        selectionMenu.className = 'prompt-menu';
-        selectionMenu.style.left = `${position.x}px`;
-        selectionMenu.style.top = `${position.y}px`;
+        selectionMenu = createPositionedContainer('prompt-menu', position.x, position.y);
 
         // Create toggle button (SelectionButton)
-        const toggleButton = document.createElement('button');
-        toggleButton.textContent = '✨';
-        toggleButton.className = 'selection-button';
+        const toggleButton = createStyledButton('✨', 'selection-button');
 
         // Add click handler for manual toggle
         toggleButton.addEventListener('click', togglePromptButtons);
@@ -269,9 +297,7 @@ function createSelectionMenu(x, y) {
         selectionMenu.appendChild(toggleButton);
 
         if (prompts.length === 0) {
-            const settingsButton = document.createElement('button');
-            settingsButton.textContent = 'Open Settings';
-            settingsButton.className = 'prompt-button';
+            const settingsButton = createStyledButton('Open Settings', 'prompt-button');
             settingsButton.style.display = 'none';
             settingsButton.addEventListener('click', function () {
                 removeSelectionMenu();
@@ -294,18 +320,9 @@ function createSelectionMenu(x, y) {
 
 // Function to remove selection menu
 function removeSelectionMenu() {
-    if (selectionMenu) {
-        // Apply fade out animation
-        selectionMenu.style.animation = 'fadeOutButton 0.2s ease-out forwards';
-
-        // Wait for animation to complete before removing
-        setTimeout(() => {
-            if (selectionMenu && selectionMenu.parentNode) {
-                document.body.removeChild(selectionMenu);
-                selectionMenu = null;
-            }
-        }, 200); // Match animation duration
-    }
+    removeElementWithFadeOut(selectionMenu, () => {
+        selectionMenu = null;
+    });
 }
 
 // Function to handle mouse move during dragging
@@ -498,57 +515,32 @@ function createLoadingIndicator() {
     // Remove existing indicator if any
     removeLoadingIndicator();
 
-    // Create loading indicator
-    loadingIndicator = document.createElement('div');
-    loadingIndicator.className = 'loading-indicator';
+    // Position at last known mouse position or center of viewport
+    const x = (lastMouseX || window.innerWidth / 2) + window.scrollX;
+    const y = (lastMouseY || window.innerHeight / 2) + window.scrollY;
+
+    // Create loading indicator container
+    loadingIndicator = createPositionedContainer('loading-indicator', x, y);
 
     // Create spinner button
-    const spinnerButton = document.createElement('button');
-    spinnerButton.className = 'selection-button loading disabled';
-    spinnerButton.textContent = '✨';
-
+    const spinnerButton = createStyledButton('✨', 'selection-button', ['loading', 'disabled']);
     loadingIndicator.appendChild(spinnerButton);
-
-    // Position at last known mouse position or center of viewport
-    const x = lastMouseX || window.innerWidth / 2;
-    const y = lastMouseY || window.innerHeight / 2;
-
-    loadingIndicator.style.left = `${x + window.scrollX}px`;
-    loadingIndicator.style.top = `${y + window.scrollY}px`;
 
     document.body.appendChild(loadingIndicator);
 }
 
 // Function to remove loading indicator
 function removeLoadingIndicator() {
-    if (loadingIndicator) {
-        // Apply fade out animation
-        loadingIndicator.style.animation = 'fadeOutButton 0.2s ease-out forwards';
-
-        // Wait for animation to complete before removing
-        setTimeout(() => {
-            if (loadingIndicator && loadingIndicator.parentNode) {
-                document.body.removeChild(loadingIndicator);
-                loadingIndicator = null;
-            }
-        }, 200); // Match animation duration
-    }
+    removeElementWithFadeOut(loadingIndicator, () => {
+        loadingIndicator = null;
+    });
 }
 
 // Function to remove result overlay
 function removeResultOverlay() {
-    if (resultOverlay) {
-        // Apply fade out animation
-        resultOverlay.style.animation = 'fadeOutButton 0.2s ease-out forwards';
-
-        // Wait for animation to complete before removing
-        setTimeout(() => {
-            if (resultOverlay && resultOverlay.parentNode) {
-                document.body.removeChild(resultOverlay);
-                resultOverlay = null;
-            }
-        }, 200); // Match animation duration
-    }
+    removeElementWithFadeOut(resultOverlay, () => {
+        resultOverlay = null;
+    });
 }
 
 
