@@ -324,6 +324,7 @@ function displayPrompts(prompts) {
         promptArticle.appendChild(headerDiv);
 
         const textPara = document.createElement('p');
+        textPara.className = 'prompt-text';
         textPara.textContent = prompt.text;
         promptArticle.appendChild(textPara);
 
