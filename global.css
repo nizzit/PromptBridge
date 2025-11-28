@@ -464,3 +464,23 @@ select.align-right {
     max-width: 100px;
     text-align: right;
 }
+
+/* Prompt header with badge */
+.prompt-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+/* Full page badge */
+.full-page-badge {
+    font-size: 0.75em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

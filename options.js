@@ -305,9 +305,22 @@ function displayPrompts(prompts) {
 
     prompts.forEach((prompt, index) => {
         const promptArticle = document.createElement('article');
+
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'prompt-header';
+
         const nameLabel = document.createElement('strong');
         nameLabel.textContent = prompt.name;
-        promptArticle.appendChild(nameLabel);
+        headerDiv.appendChild(nameLabel);
+
+        if (prompt.useFullPage) {
+            const fullPageBadge = document.createElement('span');
+            fullPageBadge.className = 'full-page-badge';
+            fullPageBadge.textContent = 'Full Page';
+            headerDiv.appendChild(fullPageBadge);
+        }
+
+        promptArticle.appendChild(headerDiv);
 
         const textPara = document.createElement('p');
         textPara.textContent = prompt.text;
@@ -335,6 +348,7 @@ function displayPrompts(prompts) {
 function addPrompt() {
     const promptName = document.getElementById('prompt-name').value.trim();
     const promptText = document.getElementById('prompt-text').value.trim();
+    const useFullPage = document.getElementById('use-full-page').checked;
 
     if (!promptName || !promptText) {
         showStatus('Please provide both prompt name and text', 'red', 'prompts');
@@ -349,13 +363,15 @@ function addPrompt() {
             // Update existing prompt
             prompts[editingIndex] = {
                 name: promptName,
-                text: promptText
+                text: promptText,
+                useFullPage: useFullPage
             };
         } else {
             // Add new prompt
             prompts.push({
                 name: promptName,
-                text: promptText
+                text: promptText,
+                useFullPage: useFullPage
             });
         }
 
@@ -369,6 +385,7 @@ function addPrompt() {
                 showStatus(message, 'green', 'prompts');
                 document.getElementById('prompt-name').value = '';
                 document.getElementById('prompt-text').value = '';
+                document.getElementById('use-full-page').checked = false;
                 editingIndex = null;
                 document.getElementById('add-prompt').textContent = 'Add Prompt';
                 document.getElementById('cancel-edit').style.display = 'none';
@@ -408,6 +425,7 @@ function editPrompt(index) {
         if (prompt) {
             document.getElementById('prompt-name').value = prompt.name;
             document.getElementById('prompt-text').value = prompt.text;
+            document.getElementById('use-full-page').checked = prompt.useFullPage || false;
             editingIndex = index;
             document.getElementById('add-prompt').textContent = 'Update Prompt';
             document.getElementById('cancel-edit').style.display = 'inline';
@@ -420,6 +438,7 @@ function editPrompt(index) {
 function cancelEdit() {
     document.getElementById('prompt-name').value = '';
     document.getElementById('prompt-text').value = '';
+    document.getElementById('use-full-page').checked = false;
     editingIndex = null;
     document.getElementById('add-prompt').textContent = 'Add Prompt';
     document.getElementById('cancel-edit').style.display = 'none';

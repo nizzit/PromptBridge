@@ -15,6 +15,24 @@ function getStorage() {
     return typeof browser !== 'undefined' ? browser.storage : chrome.storage;
 }
 
+// Function to get all text from the page
+function getFullPageText() {
+    // Get text from body, excluding script and style tags
+    const clone = document.body.cloneNode(true);
+
+    // Remove script and style elements
+    const scriptsAndStyles = clone.querySelectorAll('script, style, noscript');
+    scriptsAndStyles.forEach(el => el.remove());
+
+    // Get text content and clean it up
+    let text = clone.textContent || clone.innerText || '';
+
+    // Clean up excessive whitespace
+    text = text.replace(/\s+/g, ' ').trim();
+
+    return text;
+}
+
 // Function to create a prompt button
 function createPromptButton(prompt, storage) {
     const button = document.createElement('button');
@@ -560,12 +578,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const prompt = prompts[request.promptIndex];
 
             if (prompt) {
+                // Determine what text to use
+                let textToUse = request.selectedText || '';
+
+                // If no selection and prompt supports full page, use full page text
+                if (!textToUse && prompt.useFullPage) {
+                    textToUse = getFullPageText();
+                }
+
                 // Create a temporary button element for the loading state
                 const tempButton = document.createElement('button');
                 tempButton.textContent = prompt.name;
 
                 // Execute the prompt
-                handlePromptSelection(prompt, request.selectedText, storage, tempButton, prompt.name);
+                handlePromptSelection(prompt, textToUse, storage, tempButton, prompt.name);
             } else {
                 createResultOverlay('Error: Prompt not found');
             }
