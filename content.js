@@ -245,8 +245,16 @@ function createSelectionMenu(x, y) {
 // Function to remove selection menu
 function removeSelectionMenu() {
     if (selectionMenu) {
-        document.body.removeChild(selectionMenu);
-        selectionMenu = null;
+        // Apply fade out animation
+        selectionMenu.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+
+        // Wait for animation to complete before removing
+        setTimeout(() => {
+            if (selectionMenu && selectionMenu.parentNode) {
+                document.body.removeChild(selectionMenu);
+                selectionMenu = null;
+            }
+        }, 200); // Match animation duration
     }
 }
 
