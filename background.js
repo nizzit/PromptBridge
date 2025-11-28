@@ -21,23 +21,37 @@ function createContextMenu() {
                 contexts: ['selection', 'page']
             });
 
-            // Add prompt items - only shown when text is selected
+            // Add prompt items
             if (prompts.length > 0) {
+                let hasSelectionOnlyPrompts = false;
+                let hasFullPagePrompts = false;
+
                 prompts.forEach((prompt, index) => {
+                    // Determine contexts based on useFullPage flag
+                    const contexts = prompt.useFullPage ? ['selection', 'page'] : ['selection'];
+
                     chrome.contextMenus.create({
                         id: `prompt-${index}`,
                         parentId: 'promptbridge-parent',
                         title: prompt.name,
-                        contexts: ['selection']
+                        contexts: contexts
                     });
+
+                    if (prompt.useFullPage) {
+                        hasFullPagePrompts = true;
+                    } else {
+                        hasSelectionOnlyPrompts = true;
+                    }
                 });
 
-                // Add separator before settings - only when text is selected
+                // Add separator before settings
+                // Show on page context only if there are full page prompts
+                const separatorContexts = hasFullPagePrompts ? ['selection', 'page'] : ['selection'];
                 chrome.contextMenus.create({
                     id: 'separator',
                     parentId: 'promptbridge-parent',
                     type: 'separator',
-                    contexts: ['selection']
+                    contexts: separatorContexts
                 });
             }
 
@@ -71,13 +85,14 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         chrome.runtime.openOptionsPage();
     } else if (info.menuItemId.startsWith('prompt-')) {
         const promptIndex = parseInt(info.menuItemId.replace('prompt-', ''));
-        const selectedText = info.selectionText;
+        const selectedText = info.selectionText || '';
 
         // Send message to content script to handle prompt
         chrome.tabs.sendMessage(tab.id, {
             action: 'executePrompt',
             promptIndex: promptIndex,
-            selectedText: selectedText
+            selectedText: selectedText,
+            useFullPageIfNoSelection: true
         });
     }
 });
