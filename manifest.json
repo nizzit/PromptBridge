@@ -48,6 +48,7 @@
                 "<all_urls>"
             ],
             "js": [
+                "markdown-parser.js",
                 "content.js"
             ],
             "css": [
