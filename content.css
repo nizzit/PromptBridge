@@ -66,6 +66,16 @@
     padding: 8px;
 }
 
+.loading-indicator {
+    position: absolute;
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    animation: fadeInButton 0.2s ease-out forwards;
+}
+
 .selection-button,
 .prompt-button {
     cursor: pointer;

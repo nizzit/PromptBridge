@@ -3,6 +3,7 @@ console.log("Content script loaded.");
 
 let selectionMenu = null;
 let resultOverlay = null;
+let loadingIndicator = null; // Loading indicator for context menu requests
 let lastMouseX = 0;
 let lastMouseY = 0;
 let isDragging = false;
@@ -68,6 +69,8 @@ async function handlePromptSelection(prompt, selectedText, storage, button, orig
         alert('Error: API settings are not configured. Please configure the extension.');
         // Restore button
         button.textContent = originalText;
+        // Remove loading indicator if shown
+        removeLoadingIndicator();
         return;
     }
 
@@ -85,6 +88,8 @@ async function handlePromptSelection(prompt, selectedText, storage, button, orig
             // Remove menu after receiving response
             isProcessing = false;
             removeSelectionMenu();
+            // Remove loading indicator
+            removeLoadingIndicator();
 
             if (response.success) {
                 const data = response.data;
@@ -104,6 +109,8 @@ async function handlePromptSelection(prompt, selectedText, storage, button, orig
         // Remove menu on error too
         isProcessing = false;
         removeSelectionMenu();
+        // Remove loading indicator
+        removeLoadingIndicator();
         createResultOverlay(`Error: ${error.message}`);
         console.error('Error:', error);
     }
@@ -486,6 +493,48 @@ function createResultOverlay(text) {
     });
 }
 
+// Function to create loading indicator for context menu requests
+function createLoadingIndicator() {
+    // Remove existing indicator if any
+    removeLoadingIndicator();
+
+    // Create loading indicator
+    loadingIndicator = document.createElement('div');
+    loadingIndicator.className = 'loading-indicator';
+
+    // Create spinner button
+    const spinnerButton = document.createElement('button');
+    spinnerButton.className = 'selection-button loading disabled';
+    spinnerButton.textContent = '✨';
+
+    loadingIndicator.appendChild(spinnerButton);
+
+    // Position at last known mouse position or center of viewport
+    const x = lastMouseX || window.innerWidth / 2;
+    const y = lastMouseY || window.innerHeight / 2;
+
+    loadingIndicator.style.left = `${x + window.scrollX}px`;
+    loadingIndicator.style.top = `${y + window.scrollY}px`;
+
+    document.body.appendChild(loadingIndicator);
+}
+
+// Function to remove loading indicator
+function removeLoadingIndicator() {
+    if (loadingIndicator) {
+        // Apply fade out animation
+        loadingIndicator.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+
+        // Wait for animation to complete before removing
+        setTimeout(() => {
+            if (loadingIndicator && loadingIndicator.parentNode) {
+                document.body.removeChild(loadingIndicator);
+                loadingIndicator = null;
+            }
+        }, 200); // Match animation duration
+    }
+}
+
 // Function to remove result overlay
 function removeResultOverlay() {
     if (resultOverlay) {
@@ -572,6 +621,9 @@ document.addEventListener('contextmenu', function (event) {
 // Listen for messages from background script (context menu)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'executePrompt') {
+        // Show loading indicator immediately
+        createLoadingIndicator();
+
         const storage = getStorage();
         storage.sync.get(['prompts'], function (result) {
             const prompts = result.prompts || [];
@@ -593,6 +645,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 // Execute the prompt
                 handlePromptSelection(prompt, textToUse, storage, tempButton, prompt.name);
             } else {
+                // Remove loading indicator on error
+                removeLoadingIndicator();
                 createResultOverlay('Error: Prompt not found');
             }
         });
