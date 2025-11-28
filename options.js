@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const promptsStatusMessage = document.getElementById('prompts-status-message');
     const addPromptButton = document.getElementById('add-prompt');
     const cancelEditButton = document.getElementById('cancel-edit');
+    const exportButton = document.getElementById('export-settings');
+    const importButton = document.getElementById('import-settings');
+    const importFileInput = document.getElementById('import-file');
 
     // Load saved settings when opening the page
     loadSettings();
@@ -33,6 +36,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Cancel edit handler
     cancelEditButton.addEventListener('click', cancelEdit);
+
+    // Export settings handler
+    exportButton.addEventListener('click', exportSettings);
+
+    // Import settings handler
+    importButton.addEventListener('click', () => {
+        importFileInput.click();
+    });
+
+    importFileInput.addEventListener('change', importSettings);
 });
 
 // Load settings function
@@ -240,7 +253,15 @@ async function fetchModels() {
 
 // Helper function to show status
 function showStatus(message, color, target = 'settings') {
-    const statusElementId = target === 'prompts' ? 'prompts-status-message' : 'settings-status-message';
+    let statusElementId;
+    if (target === 'prompts') {
+        statusElementId = 'prompts-status-message';
+    } else if (target === 'import-export') {
+        statusElementId = 'import-export-status';
+    } else {
+        statusElementId = 'settings-status-message';
+    }
+
     const statusMessage = document.getElementById(statusElementId);
 
     if (!statusMessage) return;
@@ -403,4 +424,98 @@ function cancelEdit() {
     document.getElementById('add-prompt').textContent = 'Add Prompt';
     document.getElementById('cancel-edit').style.display = 'none';
     showStatus('Edit cancelled', 'blue', 'prompts');
+}
+
+// Export settings function
+function exportSettings() {
+    const storage = getStorage();
+    // Explicitly request all settings keys to ensure we get everything
+    storage.sync.get([
+        'apiUrl',
+        'apiToken',
+        'modelName',
+        'menuPosition',
+        'openOnHover',
+        'resultWidth',
+        'resultHeight',
+        'prompts'
+    ], function (result) {
+        // Create a JSON object with all settings
+        const exportData = {
+            exportDate: new Date().toISOString(),
+            settings: result
+        };
+
+        // Convert to JSON string
+        const jsonString = JSON.stringify(exportData, null, 2);
+
+        // Create a blob and download link
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `promptbridge-settings-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showStatus('Settings exported successfully!', 'green', 'import-export');
+    });
+}
+
+// Import settings function
+function importSettings(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        try {
+            const importData = JSON.parse(e.target.result);
+
+            // Validate the imported data
+            if (!importData.settings) {
+                showStatus('Invalid settings file format', 'red', 'import-export');
+                return;
+            }
+
+            // Ask for confirmation
+            const confirmMessage = `Import settings from ${importData.exportDate ? new Date(importData.exportDate).toLocaleString() : 'unknown date'}?\n\nThis will overwrite your current settings.`;
+            if (!confirm(confirmMessage)) {
+                showStatus('Import cancelled', 'blue', 'import-export');
+                event.target.value = ''; // Reset file input
+                return;
+            }
+
+            // Import the settings
+            const storage = getStorage();
+            storage.sync.set(importData.settings, function () {
+                const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
+
+                if (lastError) {
+                    showStatus('Error importing settings: ' + lastError.message, 'red', 'import-export');
+                } else {
+                    showStatus('Settings imported successfully!', 'green', 'import-export');
+                    // Reload the page to reflect imported settings
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
+            });
+
+        } catch (error) {
+            showStatus('Error parsing settings file: ' + error.message, 'red', 'import-export');
+        }
+
+        // Reset file input
+        event.target.value = '';
+    };
+
+    reader.onerror = function () {
+        showStatus('Error reading file', 'red', 'import-export');
+        event.target.value = '';
+    };
+
+    reader.readAsText(file);
 }
