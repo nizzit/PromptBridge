@@ -471,8 +471,16 @@ function createResultOverlay(text) {
 // Function to remove result overlay
 function removeResultOverlay() {
     if (resultOverlay) {
-        document.body.removeChild(resultOverlay);
-        resultOverlay = null;
+        // Apply fade out animation
+        resultOverlay.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+
+        // Wait for animation to complete before removing
+        setTimeout(() => {
+            if (resultOverlay && resultOverlay.parentNode) {
+                document.body.removeChild(resultOverlay);
+                resultOverlay = null;
+            }
+        }, 200); // Match animation duration
     }
 }
 
@@ -486,6 +494,11 @@ document.addEventListener('mouseup', function (event) {
 
     // If clicked on menu, don't recreate it
     if (selectionMenu && selectionMenu.contains(event.target)) {
+        return;
+    }
+
+    // If clicked on result overlay, don't recreate menu
+    if (resultOverlay && resultOverlay.contains(event.target)) {
         return;
     }
 
