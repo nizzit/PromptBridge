@@ -321,6 +321,13 @@ function displayPrompts(prompts) {
             headerDiv.appendChild(fullPageBadge);
         }
 
+        if (prompt.prefetch) {
+            const prefetchBadge = document.createElement('span');
+            prefetchBadge.className = 'full-page-badge';
+            prefetchBadge.textContent = 'Prefetch';
+            headerDiv.appendChild(prefetchBadge);
+        }
+
         promptArticle.appendChild(headerDiv);
 
         const textPara = document.createElement('p');
@@ -351,6 +358,7 @@ function addPrompt() {
     const promptName = document.getElementById('prompt-name').value.trim();
     const promptText = document.getElementById('prompt-text').value.trim();
     const useFullPage = document.getElementById('use-full-page').checked;
+    const prefetch = document.getElementById('prefetch').checked;
 
     if (!promptName || !promptText) {
         showStatus('Please provide both prompt name and text', 'red', 'prompts');
@@ -366,14 +374,16 @@ function addPrompt() {
             prompts[editingIndex] = {
                 name: promptName,
                 text: promptText,
-                useFullPage: useFullPage
+                useFullPage: useFullPage,
+                prefetch: prefetch
             };
         } else {
             // Add new prompt
             prompts.push({
                 name: promptName,
                 text: promptText,
-                useFullPage: useFullPage
+                useFullPage: useFullPage,
+                prefetch: prefetch
             });
         }
 
@@ -388,6 +398,7 @@ function addPrompt() {
                 document.getElementById('prompt-name').value = '';
                 document.getElementById('prompt-text').value = '';
                 document.getElementById('use-full-page').checked = false;
+                document.getElementById('prefetch').checked = false;
                 editingIndex = null;
                 document.getElementById('add-prompt').textContent = 'Add Prompt';
                 document.getElementById('cancel-edit').style.display = 'none';
@@ -428,6 +439,7 @@ function editPrompt(index) {
             document.getElementById('prompt-name').value = prompt.name;
             document.getElementById('prompt-text').value = prompt.text;
             document.getElementById('use-full-page').checked = prompt.useFullPage || false;
+            document.getElementById('prefetch').checked = prompt.prefetch || false;
             editingIndex = index;
             document.getElementById('add-prompt').textContent = 'Update Prompt';
             document.getElementById('cancel-edit').style.display = 'inline';
@@ -441,6 +453,7 @@ function cancelEdit() {
     document.getElementById('prompt-name').value = '';
     document.getElementById('prompt-text').value = '';
     document.getElementById('use-full-page').checked = false;
+    document.getElementById('prefetch').checked = false;
     editingIndex = null;
     document.getElementById('add-prompt').textContent = 'Add Prompt';
     document.getElementById('cancel-edit').style.display = 'none';

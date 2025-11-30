@@ -11,6 +11,11 @@ let dragOffsetX = 0;
 let dragOffsetY = 0;
 let isProcessing = false; // Request processing flag
 
+// Prefetch cache: stores results for prompts with prefetch enabled
+// Key: prompt name, Value: { status: 'loading'|'ready'|'error', result: data, selectedText: text }
+let prefetchCache = {};
+let currentMenuSelectedText = ''; // Track text for current menu session
+
 // Utility function to get storage API
 function getStorage() {
     return typeof browser !== 'undefined' ? browser.storage : chrome.storage;
@@ -40,6 +45,7 @@ function createPromptButton(prompt, storage) {
     button.textContent = prompt.name;
     button.className = 'prompt-button';
     button.style.display = 'none'; // Initially hidden
+
     button.addEventListener('click', async function () {
         const selectedText = window.getSelection().toString();
 
@@ -64,6 +70,41 @@ function createPromptButton(prompt, storage) {
 
 // Function to handle prompt selection and API call
 async function handlePromptSelection(prompt, selectedText, storage, button, originalText) {
+    // Check if we have a prefetch result ready for this prompt
+    const cacheKey = prompt.name;
+    const cached = prefetchCache[cacheKey];
+
+    if (prompt.prefetch && cached && cached.selectedText === selectedText) {
+        if (cached.status === 'ready') {
+            // Show cached result immediately
+            isProcessing = false;
+            removeSelectionMenu();
+            removeLoadingIndicator();
+            createResultOverlay(cached.result);
+            return;
+        } else if (cached.status === 'loading') {
+            // Subscribe to prefetch completion and wait
+            cached.callbacks.push((status, result) => {
+                // Remove menu and loading indicator
+                isProcessing = false;
+                removeSelectionMenu();
+                removeLoadingIndicator();
+
+                // Show the result
+                createResultOverlay(result);
+            });
+            // Keep spinner and processing state - will be handled by callback
+            return;
+        } else if (cached.status === 'error') {
+            // Show error from prefetch
+            isProcessing = false;
+            removeSelectionMenu();
+            removeLoadingIndicator();
+            createResultOverlay(cached.result);
+            return;
+        }
+    }
+
     const result = await storage.sync.get(['apiUrl', 'apiToken', 'modelName']);
     if (!result.apiUrl || !result.apiToken || !result.modelName) {
         alert('Error: API settings are not configured. Please configure the extension.');
@@ -71,6 +112,7 @@ async function handlePromptSelection(prompt, selectedText, storage, button, orig
         button.textContent = originalText;
         // Remove loading indicator if shown
         removeLoadingIndicator();
+        isProcessing = false;
         return;
     }
 
@@ -148,6 +190,107 @@ function removeElementWithFadeOut(element, callback = null) {
     }, 200); // Match animation duration
 }
 
+
+// Function to start prefetch for a prompt
+async function startPrefetch(prompt, selectedText, storage) {
+    const cacheKey = prompt.name;
+
+    // Mark as loading
+    prefetchCache[cacheKey] = {
+        status: 'loading',
+        result: null,
+        selectedText: selectedText,
+        callbacks: [] // Array of callbacks to call when ready
+    };
+
+    const result = await storage.sync.get(['apiUrl', 'apiToken', 'modelName']);
+    if (!result.apiUrl || !result.apiToken || !result.modelName) {
+        prefetchCache[cacheKey] = {
+            status: 'error',
+            result: 'API settings not configured',
+            selectedText: selectedText,
+            callbacks: []
+        };
+        // Call any waiting callbacks
+        executePrefetchCallbacks(cacheKey);
+        return;
+    }
+
+    try {
+        const fullPrompt = prompt.text + '\n\n' + selectedText;
+
+        // Call API through background script
+        chrome.runtime.sendMessage({
+            action: 'callAPI',
+            apiUrl: result.apiUrl,
+            apiToken: result.apiToken,
+            modelName: result.modelName,
+            fullPrompt: fullPrompt
+        }, (response) => {
+            // Only update cache if this is still the same selection session
+            if (prefetchCache[cacheKey]?.selectedText === selectedText) {
+                if (response.success) {
+                    const data = response.data;
+                    if (data.choices && data.choices[0] && data.choices[0].message) {
+                        prefetchCache[cacheKey] = {
+                            status: 'ready',
+                            result: data.choices[0].message.content,
+                            selectedText: selectedText,
+                            callbacks: prefetchCache[cacheKey].callbacks
+                        };
+
+                        // Execute any waiting callbacks
+                        executePrefetchCallbacks(cacheKey);
+                    } else {
+                        prefetchCache[cacheKey] = {
+                            status: 'error',
+                            result: 'Unexpected response format from API',
+                            selectedText: selectedText,
+                            callbacks: prefetchCache[cacheKey].callbacks
+                        };
+                        executePrefetchCallbacks(cacheKey);
+                    }
+                } else {
+                    prefetchCache[cacheKey] = {
+                        status: 'error',
+                        result: `Error accessing API: ${response.error}`,
+                        selectedText: selectedText,
+                        callbacks: prefetchCache[cacheKey].callbacks
+                    };
+                    executePrefetchCallbacks(cacheKey);
+                }
+            }
+        });
+    } catch (error) {
+        if (prefetchCache[cacheKey]?.selectedText === selectedText) {
+            prefetchCache[cacheKey] = {
+                status: 'error',
+                result: `Error: ${error.message}`,
+                selectedText: selectedText,
+                callbacks: prefetchCache[cacheKey].callbacks
+            };
+            executePrefetchCallbacks(cacheKey);
+        }
+    }
+}
+
+// Function to execute callbacks waiting for prefetch result
+function executePrefetchCallbacks(cacheKey) {
+    const cached = prefetchCache[cacheKey];
+    if (!cached || !cached.callbacks) return;
+
+    // Execute all callbacks
+    cached.callbacks.forEach(callback => {
+        try {
+            callback(cached.status, cached.result);
+        } catch (error) {
+            console.error('Error executing prefetch callback:', error);
+        }
+    });
+
+    // Clear callbacks after execution
+    cached.callbacks = [];
+}
 
 // Function to toggle prompt buttons visibility
 function togglePromptButtons() {
@@ -249,6 +392,10 @@ function createSelectionMenu(x, y) {
         return; // Don't create menu if no selection
     }
 
+    // Clear prefetch cache for new selection session
+    prefetchCache = {};
+    currentMenuSelectedText = selectedText;
+
     // Get menu position preference and create menu
     const storage = getStorage();
     storage.sync.get(['prompts', 'menuPosition', 'openOnHover'], function (result) {
@@ -308,6 +455,11 @@ function createSelectionMenu(x, y) {
             prompts.forEach((prompt) => {
                 const button = createPromptButton(prompt, storage);
                 selectionMenu.appendChild(button);
+
+                // Start prefetch for prompts that have it enabled
+                if (prompt.prefetch) {
+                    startPrefetch(prompt, selectedText, storage);
+                }
             });
         }
 
@@ -322,6 +474,9 @@ function createSelectionMenu(x, y) {
 function removeSelectionMenu() {
     removeElementWithFadeOut(selectionMenu, () => {
         selectionMenu = null;
+        // Clear prefetch cache when menu is removed
+        prefetchCache = {};
+        currentMenuSelectedText = '';
     });
 }
 
