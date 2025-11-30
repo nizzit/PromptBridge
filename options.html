@@ -82,6 +82,20 @@
         <input type="checkbox" id="open-on-hover" class="align-right">
     </div>
 
+    <div>
+        <label>Prefetch timing (when to start loading prompts):</label>
+        <div class="radio-group">
+            <label class="radio-option">
+                <input type="radio" name="prefetch-timing" value="on-button" checked>
+                On button appearance (faster, uses more API calls)
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="prefetch-timing" value="on-menu">
+                On menu open (slower, fewer API calls)
+            </label>
+        </div>
+    </div>
+
     <div class="form-row">
         <label for="result-width">Result window - Width:</label>
         <input type="number" id="result-width" class="align-right" placeholder="500" min="200" max="1200" step="50">

@@ -293,7 +293,7 @@ function executePrefetchCallbacks(cacheKey) {
 }
 
 // Function to toggle prompt buttons visibility
-function togglePromptButtons() {
+function togglePromptButtons(shouldStartPrefetch = false) {
     if (!selectionMenu) return;
 
     const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
@@ -317,7 +317,34 @@ function togglePromptButtons() {
             button.style.display = 'block';
             button.style.animation = 'fadeInButton 0.2s ease-out forwards';
         });
+
+        // Start prefetch if requested (for on-menu timing)
+        if (shouldStartPrefetch) {
+            startPrefetchForVisiblePrompts();
+        }
     }
+}
+
+// Function to start prefetch for all prompts with prefetch enabled
+function startPrefetchForVisiblePrompts() {
+    if (!selectionMenu) return;
+
+    const selectedText = currentMenuSelectedText;
+    if (!selectedText) return;
+
+    const storage = getStorage();
+    storage.sync.get(['prompts'], function (result) {
+        const prompts = result.prompts || [];
+        prompts.forEach((prompt) => {
+            if (prompt.prefetch) {
+                const cacheKey = prompt.name;
+                // Only start if not already in cache
+                if (!prefetchCache[cacheKey]) {
+                    startPrefetch(prompt, selectedText, storage);
+                }
+            }
+        });
+    });
 }
 
 // Function to calculate menu position based on user preference
@@ -398,10 +425,11 @@ function createSelectionMenu(x, y) {
 
     // Get menu position preference and create menu
     const storage = getStorage();
-    storage.sync.get(['prompts', 'menuPosition', 'openOnHover'], function (result) {
+    storage.sync.get(['prompts', 'menuPosition', 'openOnHover', 'prefetchTiming'], function (result) {
         const prompts = result.prompts || [];
         const menuPosition = result.menuPosition || 'middle-center';
         const openOnHover = result.openOnHover || false;
+        const prefetchTiming = result.prefetchTiming || 'on-button';
 
         // Calculate position based on preference
         const position = calculateMenuPosition(x, y, menuPosition);
@@ -413,7 +441,11 @@ function createSelectionMenu(x, y) {
         const toggleButton = createStyledButton('✨', 'selection-button');
 
         // Add click handler for manual toggle
-        toggleButton.addEventListener('click', togglePromptButtons);
+        toggleButton.addEventListener('click', function () {
+            // Start prefetch on menu open if timing is set to on-menu
+            const shouldStartPrefetch = (prefetchTiming === 'on-menu');
+            togglePromptButtons(shouldStartPrefetch);
+        });
 
         // Add hover handlers if enabled
         if (openOnHover) {
@@ -423,6 +455,11 @@ function createSelectionMenu(x, y) {
                     button.style.display = 'block';
                     button.style.animation = 'fadeInButton 0.2s ease-out forwards';
                 });
+
+                // Start prefetch on menu open if timing is set to on-menu
+                if (prefetchTiming === 'on-menu') {
+                    startPrefetchForVisiblePrompts();
+                }
             });
 
             selectionMenu.addEventListener('mouseleave', function () {
@@ -456,8 +493,8 @@ function createSelectionMenu(x, y) {
                 const button = createPromptButton(prompt, storage);
                 selectionMenu.appendChild(button);
 
-                // Start prefetch for prompts that have it enabled
-                if (prompt.prefetch) {
+                // Start prefetch for prompts that have it enabled and timing is on-button
+                if (prompt.prefetch && prefetchTiming === 'on-button') {
                     startPrefetch(prompt, selectedText, storage);
                 }
             });

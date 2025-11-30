@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Load settings function
 function loadSettings() {
     const storage = getStorage();
-    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'resultWidth', 'resultHeight'], function (result) {
+    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight'], function (result) {
         if (result.apiUrl) {
             document.getElementById('api-url').value = result.apiUrl;
         }
@@ -90,6 +90,14 @@ function loadSettings() {
         const openOnHover = result.openOnHover || false;
         document.getElementById('open-on-hover').checked = openOnHover;
 
+        // Load prefetch timing setting (default to on-button)
+        const prefetchTiming = result.prefetchTiming || 'on-button';
+        const timingRadioButtons = document.querySelectorAll('input[name="prefetch-timing"]');
+        const timingRadioButton = Array.from(timingRadioButtons).find(rb => rb.value === prefetchTiming);
+        if (timingRadioButton) {
+            timingRadioButton.checked = true;
+        }
+
         // Load result window size settings
         const resultWidth = result.resultWidth || DEFAULT_RESULT_WIDTH;
         const resultHeight = result.resultHeight || DEFAULT_RESULT_HEIGHT;
@@ -105,6 +113,7 @@ function saveSettings() {
     const modelName = document.getElementById('model-name').value;
     const menuPosition = document.querySelector('input[name="menu-position"]:checked')?.value || 'middle-center';
     const openOnHover = document.getElementById('open-on-hover').checked;
+    const prefetchTiming = document.querySelector('input[name="prefetch-timing"]:checked')?.value || 'on-button';
 
     const resultWidthInput = document.getElementById('result-width');
     const resultHeightInput = document.getElementById('result-height');
@@ -153,6 +162,7 @@ function saveSettings() {
         modelName: modelName,
         menuPosition: menuPosition,
         openOnHover: openOnHover,
+        prefetchTiming: prefetchTiming,
         resultWidth: resultWidth,
         resultHeight: resultHeight
     }, function () {
@@ -470,6 +480,7 @@ function exportSettings() {
         'modelName',
         'menuPosition',
         'openOnHover',
+        'prefetchTiming',
         'resultWidth',
         'resultHeight',
         'prompts'

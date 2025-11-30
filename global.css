@@ -490,3 +490,19 @@ select.align-right {
     white-space: pre-wrap;
     word-wrap: break-word;
 }
+
+/* Radio button group container */
+.radio-group {
+    margin-left: 30px;
+    margin-top: 5px;
+}
+
+/* Radio button option label */
+.radio-option {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.radio-option:last-child {
+    margin-bottom: 0;
+}
