@@ -506,3 +506,72 @@ select.align-right {
 .radio-option:last-child {
     margin-bottom: 0;
 }
+
+/* Tooltip styles */
+.tooltip-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tooltip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--bg-medium-gray);
+    color: var(--text-primary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: help;
+    border: 1px solid #bdbdbd;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.tooltip-icon:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--text-white);
+}
+
+.tooltip-text {
+    visibility: hidden;
+    position: absolute;
+    z-index: 1000;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: var(--text-white);
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 400;
+    white-space: normal;
+    width: max-content;
+    max-width: 450px;
+    min-width: 200px;
+    line-height: 1.5;
+    opacity: 0;
+    transition: opacity 0.2s, visibility 0.2s;
+    pointer-events: none;
+}
+
+.tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+}
+
+.tooltip-icon:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
