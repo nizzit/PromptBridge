@@ -663,12 +663,113 @@ function createOverlayHeader() {
     return header;
 }
 
+const ALLOWED_MARKDOWN_TAGS = new Set([
+    'A', 'BLOCKQUOTE', 'BR', 'CODE', 'DEL', 'DIV', 'EM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+    'HR', 'LI', 'OL', 'P', 'PRE', 'SPAN', 'STRONG', 'UL'
+]);
+
+const ALLOWED_MARKDOWN_ATTRIBUTES = {
+    '*': ['class'],
+    'A': ['href', 'title', 'target', 'rel'],
+    'CODE': ['class'],
+    'PRE': ['class']
+};
+
+const ALLOWED_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
+
+function sanitizeMarkdownAttributes(element) {
+    const allowedAttrNames = new Set([
+        ...((ALLOWED_MARKDOWN_ATTRIBUTES['*'] || []).map(attr => attr.toLowerCase())),
+        ...((ALLOWED_MARKDOWN_ATTRIBUTES[element.tagName] || []).map(attr => attr.toLowerCase()))
+    ]);
+
+    Array.from(element.attributes).forEach(attr => {
+        const attrName = attr.name.toLowerCase();
+        if (!allowedAttrNames.has(attrName)) {
+            element.removeAttribute(attr.name);
+            return;
+        }
+
+        if (element.tagName === 'A' && attrName === 'href') {
+            const hrefValue = element.getAttribute('href') || '';
+            try {
+                const url = new URL(hrefValue, window.location.origin);
+                if (!ALLOWED_URL_PROTOCOLS.has(url.protocol)) {
+                    element.removeAttribute('href');
+                } else {
+                    element.setAttribute('rel', 'noopener noreferrer');
+                    if (!element.getAttribute('target')) {
+                        element.setAttribute('target', '_blank');
+                    }
+                }
+            } catch (error) {
+                element.removeAttribute('href');
+            }
+        }
+    });
+}
+
+function sanitizeParsedMarkdown(unsafeHTML) {
+    if (!unsafeHTML) {
+        return '';
+    }
+
+    const parser = new DOMParser();
+    const parsedDoc = parser.parseFromString(`<div>${unsafeHTML}</div>`, 'text/html');
+    const container = parsedDoc.body.firstElementChild;
+
+    if (!container) {
+        return '';
+    }
+
+    const nodesToProcess = [container];
+
+    while (nodesToProcess.length > 0) {
+        const currentNode = nodesToProcess.pop();
+        Array.from(currentNode.childNodes).forEach(child => {
+            if (child.nodeType === Node.TEXT_NODE) {
+                return;
+            }
+
+            if (child.nodeType === Node.COMMENT_NODE) {
+                child.remove();
+                return;
+            }
+
+            if (child.nodeType === Node.ELEMENT_NODE) {
+                if (!ALLOWED_MARKDOWN_TAGS.has(child.tagName)) {
+                    const textNode = parsedDoc.createTextNode(child.textContent || '');
+                    child.replaceWith(textNode);
+                } else {
+                    sanitizeMarkdownAttributes(child);
+                    nodesToProcess.push(child);
+                }
+                return;
+            }
+
+            child.remove();
+        });
+    }
+
+    return container.innerHTML;
+}
+
 // Function to create overlay content
 function createOverlayContent(text) {
     const content = document.createElement('div');
     content.className = 'overlay-content';
-    // Parse markdown and set as HTML
-    content.innerHTML = parseMarkdown(text);
+    const unsafeHtml = parseMarkdown(text);
+    const sanitizedHtml = sanitizeParsedMarkdown(unsafeHtml);
+
+    // Parse sanitized HTML safely using DOMParser to avoid innerHTML security issues
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(sanitizedHtml, 'text/html');
+
+    // Append all child nodes from parsed document body
+    while (doc.body.firstChild) {
+        content.appendChild(doc.body.firstChild);
+    }
+
     return content;
 }
 
