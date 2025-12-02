@@ -85,7 +85,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         chrome.runtime.openOptionsPage();
     } else if (info.menuItemId.startsWith('prompt-')) {
         const promptIndex = parseInt(info.menuItemId.replace('prompt-', ''));
-        const selectedText = info.selectionText || '';
+        const selectedText = (info.selectionText || '').trim();
 
         // Send message to content script to handle prompt
         chrome.tabs.sendMessage(tab.id, {

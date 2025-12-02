@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Load settings function
 function loadSettings() {
     const storage = getStorage();
-    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'resultWidth', 'resultHeight'], function (result) {
+    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight'], function (result) {
         if (result.apiUrl) {
             document.getElementById('api-url').value = result.apiUrl;
         }
@@ -90,6 +90,14 @@ function loadSettings() {
         const openOnHover = result.openOnHover || false;
         document.getElementById('open-on-hover').checked = openOnHover;
 
+        // Load prefetch timing setting (default to on-button)
+        const prefetchTiming = result.prefetchTiming || 'on-button';
+        const timingRadioButtons = document.querySelectorAll('input[name="prefetch-timing"]');
+        const timingRadioButton = Array.from(timingRadioButtons).find(rb => rb.value === prefetchTiming);
+        if (timingRadioButton) {
+            timingRadioButton.checked = true;
+        }
+
         // Load result window size settings
         const resultWidth = result.resultWidth || DEFAULT_RESULT_WIDTH;
         const resultHeight = result.resultHeight || DEFAULT_RESULT_HEIGHT;
@@ -105,6 +113,7 @@ function saveSettings() {
     const modelName = document.getElementById('model-name').value;
     const menuPosition = document.querySelector('input[name="menu-position"]:checked')?.value || 'middle-center';
     const openOnHover = document.getElementById('open-on-hover').checked;
+    const prefetchTiming = document.querySelector('input[name="prefetch-timing"]:checked')?.value || 'on-button';
 
     const resultWidthInput = document.getElementById('result-width');
     const resultHeightInput = document.getElementById('result-height');
@@ -153,6 +162,7 @@ function saveSettings() {
         modelName: modelName,
         menuPosition: menuPosition,
         openOnHover: openOnHover,
+        prefetchTiming: prefetchTiming,
         resultWidth: resultWidth,
         resultHeight: resultHeight
     }, function () {
@@ -321,6 +331,13 @@ function displayPrompts(prompts) {
             headerDiv.appendChild(fullPageBadge);
         }
 
+        if (prompt.prefetch) {
+            const prefetchBadge = document.createElement('span');
+            prefetchBadge.className = 'full-page-badge';
+            prefetchBadge.textContent = 'Prefetch';
+            headerDiv.appendChild(prefetchBadge);
+        }
+
         promptArticle.appendChild(headerDiv);
 
         const textPara = document.createElement('p');
@@ -351,6 +368,7 @@ function addPrompt() {
     const promptName = document.getElementById('prompt-name').value.trim();
     const promptText = document.getElementById('prompt-text').value.trim();
     const useFullPage = document.getElementById('use-full-page').checked;
+    const prefetch = document.getElementById('prefetch').checked;
 
     if (!promptName || !promptText) {
         showStatus('Please provide both prompt name and text', 'red', 'prompts');
@@ -366,14 +384,16 @@ function addPrompt() {
             prompts[editingIndex] = {
                 name: promptName,
                 text: promptText,
-                useFullPage: useFullPage
+                useFullPage: useFullPage,
+                prefetch: prefetch
             };
         } else {
             // Add new prompt
             prompts.push({
                 name: promptName,
                 text: promptText,
-                useFullPage: useFullPage
+                useFullPage: useFullPage,
+                prefetch: prefetch
             });
         }
 
@@ -388,6 +408,7 @@ function addPrompt() {
                 document.getElementById('prompt-name').value = '';
                 document.getElementById('prompt-text').value = '';
                 document.getElementById('use-full-page').checked = false;
+                document.getElementById('prefetch').checked = false;
                 editingIndex = null;
                 document.getElementById('add-prompt').textContent = 'Add Prompt';
                 document.getElementById('cancel-edit').style.display = 'none';
@@ -428,6 +449,7 @@ function editPrompt(index) {
             document.getElementById('prompt-name').value = prompt.name;
             document.getElementById('prompt-text').value = prompt.text;
             document.getElementById('use-full-page').checked = prompt.useFullPage || false;
+            document.getElementById('prefetch').checked = prompt.prefetch || false;
             editingIndex = index;
             document.getElementById('add-prompt').textContent = 'Update Prompt';
             document.getElementById('cancel-edit').style.display = 'inline';
@@ -441,6 +463,7 @@ function cancelEdit() {
     document.getElementById('prompt-name').value = '';
     document.getElementById('prompt-text').value = '';
     document.getElementById('use-full-page').checked = false;
+    document.getElementById('prefetch').checked = false;
     editingIndex = null;
     document.getElementById('add-prompt').textContent = 'Add Prompt';
     document.getElementById('cancel-edit').style.display = 'none';
@@ -457,6 +480,7 @@ function exportSettings() {
         'modelName',
         'menuPosition',
         'openOnHover',
+        'prefetchTiming',
         'resultWidth',
         'resultHeight',
         'prompts'
