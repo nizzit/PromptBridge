@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.4] - 2025-12-02
+
+### Added
+- Import/export functionality for settings
+- Prefetch option for prompts with configurable timing
+- Full page text option for prompts
+- Markdown rendering for the result overlay
+- Fade animations for the result overlay, selection menu, and prompt toggle
+
+### Fixed
+- Preserved line breaks in prompt text
+
 ## [1.0.2] - 2025-11-11
 
 ### Added
