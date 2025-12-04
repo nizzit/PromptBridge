@@ -376,6 +376,9 @@ function displayPrompts(prompts) {
     if (addingNewPrompt) {
         displayAddForm(promptsList);
     }
+
+    // Update Add Prompt button visibility
+    updateAddButtonVisibility();
 }
 
 // Display a single prompt card
@@ -745,6 +748,19 @@ function displayAddForm(container) {
 
     addArticle.appendChild(buttonsContainer);
     container.appendChild(addArticle);
+}
+
+// Update Add Prompt button visibility based on editing state
+function updateAddButtonVisibility() {
+    const addButton = document.getElementById('add-prompt');
+    if (addButton) {
+        // Hide button if we're editing or adding a prompt
+        if (editingIndex !== null || addingNewPrompt) {
+            addButton.style.display = 'none';
+        } else {
+            addButton.style.display = '';
+        }
+    }
 }
 
 // Helper function to scroll to an element after it's rendered
