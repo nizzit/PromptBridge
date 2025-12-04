@@ -194,6 +194,15 @@ label {
     margin-bottom: 16px;
 }
 
+/* For textarea rows, align label to top */
+.form-row:has(textarea) {
+    align-items: flex-start;
+}
+
+.form-row:has(textarea) label {
+    padding-top: 8px;
+}
+
 /* Form section with spacing but no flex layout */
 .form-section {
     margin-bottom: 16px;
