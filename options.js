@@ -33,6 +33,19 @@ document.addEventListener('DOMContentLoaded', function () {
     apiUrlInput.addEventListener('input', handleApiCredentialsChange);
     apiTokenInput.addEventListener('input', handleApiCredentialsChange);
 
+    // Add event listeners to clear error highlighting when user starts typing
+    apiUrlInput.addEventListener('input', function () {
+        if (this.value.trim()) {
+            this.classList.remove('border-error');
+        }
+    });
+
+    apiTokenInput.addEventListener('input', function () {
+        if (this.value.trim()) {
+            this.classList.remove('border-error');
+        }
+    });
+
     // Save settings handler
     saveButton.addEventListener('click', saveSettings);
 
@@ -190,6 +203,14 @@ function saveSettings() {
 
     // Validation
     if (!apiUrl || !apiToken || !modelName) {
+        // Highlight empty fields
+        if (!apiUrl) {
+            document.getElementById('api-url').classList.add('border-error');
+        }
+        if (!apiToken) {
+            document.getElementById('api-token').classList.add('border-error');
+        }
+
         showStatus('All fields are required!', 'red', 'settings');
         return;
     }
