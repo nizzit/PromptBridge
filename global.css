@@ -623,3 +623,9 @@ select.align-right {
 .edit-form button:first-child {
     margin-left: 0;
 }
+
+/* Delete button confirmation state */
+.delete-button[data-confirm-state="true"] {
+    background-color: var(--status-error) !important;
+    border-color: #cc0000 !important;
+}

@@ -375,8 +375,12 @@ function displayPromptCard(container, prompt, index) {
 
     const deleteButton = document.createElement('button');
     deleteButton.textContent = 'Delete';
+    deleteButton.className = 'delete-button';
     deleteButton.addEventListener('click', function () {
-        deletePrompt(index);
+        handleDeleteClick(this, index);
+    });
+    deleteButton.addEventListener('mouseleave', function () {
+        resetDeleteButton(this);
     });
     promptArticle.appendChild(deleteButton);
 
@@ -504,6 +508,7 @@ function displayEditForm(container, prompt, index) {
         cancelInlineEdit();
     });
     buttonsContainer.appendChild(cancelButton);
+
 
     editArticle.appendChild(buttonsContainer);
     container.appendChild(editArticle);
@@ -649,6 +654,28 @@ function addPrompt() {
     // Reload prompts to show the add form
     loadPrompts();
     showStatus('Adding new prompt...', 'blue', 'prompts');
+}
+
+// Handle delete button click with confirmation
+function handleDeleteClick(button, index) {
+    if (button.dataset.confirmState === 'true') {
+        // Second click - actually delete
+        deletePrompt(index);
+    } else {
+        // First click - show confirmation
+        button.dataset.confirmState = 'true';
+        button.style.backgroundColor = '#ff4444';
+        button.style.color = 'white';
+    }
+}
+
+// Reset delete button to original state
+function resetDeleteButton(button) {
+    if (button.dataset.confirmState === 'true') {
+        button.dataset.confirmState = 'false';
+        button.style.backgroundColor = '';
+        button.style.color = '';
+    }
 }
 
 // Delete prompt function
