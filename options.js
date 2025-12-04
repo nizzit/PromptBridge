@@ -452,21 +452,21 @@ function displayPromptCard(container, prompt, index) {
 
     if (prompt.useFullPage) {
         const fullPageBadge = document.createElement('span');
-        fullPageBadge.className = 'full-page-badge';
+        fullPageBadge.className = 'badge';
         fullPageBadge.textContent = 'Full Page';
         headerDiv.appendChild(fullPageBadge);
     }
 
     if (prompt.prefetch) {
         const prefetchBadge = document.createElement('span');
-        prefetchBadge.className = 'full-page-badge';
+        prefetchBadge.className = 'badge';
         prefetchBadge.textContent = 'Prefetch';
         headerDiv.appendChild(prefetchBadge);
     }
 
     if (prompt.modelName) {
         const modelBadge = document.createElement('span');
-        modelBadge.className = 'full-page-badge';
+        modelBadge.className = 'badge';
 
         // Extract model name after the slash, or use full name if no slash
         const modelDisplayName = prompt.modelName.includes('/')

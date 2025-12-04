@@ -489,8 +489,8 @@ select.align-right {
     margin-bottom: 8px;
 }
 
-/* Full page badge */
-.full-page-badge {
+/* Badge */
+.badge {
     font-size: 0.75em;
     padding: 2px 6px;
     border-radius: 3px;
