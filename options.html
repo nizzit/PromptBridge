@@ -15,32 +15,27 @@
     <h2>Provider Settings</h2>
 
     <div class="form-row">
-        <label for="api-url">API URL:</label>
+        <label for="api-url">API URL</label>
         <input type="text" id="api-url" placeholder="https://api.example.com/v1">
     </div>
 
     <div class="form-row">
-        <label for="api-token">API Token:</label>
+        <label for="api-token">API token</label>
         <input type="password" id="api-token" placeholder="your-api-token-here">
     </div>
 
     <div class="form-row">
-        <label for="model-name">Model:</label>
+        <label for="model-name">Model</label>
         <div class="model-select-container">
             <select id="model-name" class="model-select">
                 <option value="" disabled selected>Select a model</option>
             </select>
-            <button id="get-models">Get Models</button>
+            <button id="get-models">Refresh</button>
         </div>
     </div>
 
     <h2>UI Settings</h2>
-    <div class="tooltip-container">
-        <label>Menu Position:</label>
-        <span class="tooltip-icon">?
-            <span class="tooltip-text">Menu position relative to cursor when text is selected</span>
-        </span>
-    </div>
+    <label>Menu position relative to cursor</label>
     <div class="menu-position-section">
         <div class="menu-position-grid">
             <label class="position-label">
@@ -87,39 +82,37 @@
         <input type="checkbox" id="open-on-hover" class="align-right">
     </div>
 
-    <div>
-        <div class="tooltip-container">
-            <label>Prefetch Timing:</label>
-            <span class="tooltip-icon">?
-                <span class="tooltip-text">When to start loading prompts: on button appearance (faster, more API calls)
-                    or on menu open (slower, fewer API calls)</span>
-            </span>
-        </div>
-        <div class="radio-group">
-            <label class="radio-option">
-                <input type="radio" name="prefetch-timing" value="on-button" checked>
-                On button
-            </label>
-            <label class="radio-option">
-                <input type="radio" name="prefetch-timing" value="on-menu">
-                On menu
-            </label>
-        </div>
+    <div class="form-row">
+        <label for="enable-markdown">Parse markdown in results</label>
+        <input type="checkbox" id="enable-markdown" class="align-right" checked>
     </div>
 
     <div class="form-row">
-        <label for="result-width">Result Width:</label>
+        <label for="result-width">Result width</label>
         <input type="number" id="result-width" class="align-right" placeholder="500" min="200" max="1200" step="50">
     </div>
 
     <div class="form-row">
-        <label for="result-height">Result Height:</label>
+        <label for="result-height">Result height</label>
         <input type="number" id="result-height" class="align-right" placeholder="600" min="100" max="1000" step="50">
+    </div>
+
+    <div class="form-section">
+        <label>Prefetch prompts</label>
+        <div class="radio-group">
+            <label class="radio-option">
+                <input type="radio" name="prefetch-timing" value="on-button" checked>
+                On floating button
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="prefetch-timing" value="on-menu">
+                On prompts menu
+            </label>
+        </div>
     </div>
 
     <div class="button-with-status">
         <button id="save-settings">Save Settings</button>
-        <span id="settings-status-message" class="status-message"></span>
     </div>
 
     <h2>Import/Export Settings</h2>
@@ -127,50 +120,17 @@
         <button id="export-settings">Export Settings</button>
         <button id="import-settings">Import Settings</button>
         <input type="file" id="import-file" accept=".json" style="display: none;">
-        <span id="import-export-status" class="status-message"></span>
     </div>
 
     <h2>Prompts</h2>
 
     <div id="prompts-list"></div>
 
-    <div>
-        <h2>Add New Prompt</h2>
-        <div class="form-row">
-            <label for="prompt-name">Prompt Name:</label>
-            <input type="text" id="prompt-name" placeholder="Enter prompt name">
-        </div>
-        <div class="form-row">
-            <label for="prompt-text">Prompt Text:</label>
-            <textarea id="prompt-text" rows="5" cols="50" placeholder="Enter prompt text"></textarea>
-        </div>
-        <div class="form-row">
-            <div class="tooltip-container">
-                <label for="use-full-page">Use Full Page</label>
-                <span class="tooltip-icon">?
-                    <span class="tooltip-text">Use entire page text when nothing is selected</span>
-                </span>
-            </div>
-            <input type="checkbox" id="use-full-page" class="align-right">
-        </div>
-        <div class="form-row">
-            <div class="tooltip-container">
-                <label for="prefetch">Prefetch Result</label>
-                <span class="tooltip-icon">?
-                    <span class="tooltip-text">Send request immediately when menu appears (result loads faster)</span>
-                </span>
-            </div>
-            <input type="checkbox" id="prefetch" class="align-right">
-        </div>
-        <div class="button-with-status">
-            <button id="add-prompt">Add Prompt</button>
-            <button id="cancel-edit" class="hidden">Cancel</button>
-            <span id="prompts-status-message" class="status-message"></span>
-        </div>
+    <div class="button-with-status">
+        <button id="add-prompt">Add Prompt</button>
     </div>
 
-    <footer
-        style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 0.9em;">
+    <footer>
         <span id="version-info">Loading version...</span>
     </footer>
 </body>

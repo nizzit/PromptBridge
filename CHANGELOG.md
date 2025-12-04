@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.6] - 2025-12-04
+
+### Added
+- Per-prompt model selection
+- Markdown parsing toggle option in settings
+- Inline editing for prompts with form replacement
+- Confirmation state for delete buttons
+- Auto-fetch models on credential changes
+
+### Changed
+- Comprehensive UI and styling improvements with CSS refactoring
+- Improved error handling and validation with enhanced user feedback
+
 ## [1.0.4] - 2025-12-02
 
 ### Added

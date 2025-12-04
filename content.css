@@ -1,11 +1,19 @@
 :root {
     --primary-color: #7B70E0;
+    --primary-hover: #6A5FD8;
+    --primary-active: #5A4FCC;
+    --primary-overlay: rgba(123, 112, 224, 0.1);
     --text-primary: #424242;
+    --text-secondary: #666666;
+    --text-code: #2e2e2e;
     --text-white: #ffffff;
     --bg-white: #ffffff;
     --bg-light-gray: #f0f0f0;
     --bg-medium-gray: #e0e0e0;
+    --bg-hover: #d0d0d0;
     --border-color: #cccccc;
+    --border-medium: #bdbdbd;
+    --border-hover: #a0a0a0;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
     --shadow-md: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
     --shadow-overlay: 0 2px 10px rgba(0,0,0,0.1);
@@ -15,9 +23,9 @@
 .result-overlay {
     position: absolute;
     z-index: 10002;
-    background-color: var(--bg-white);
+    background-color: var(--primary-color);
     border: 1px solid var(--primary-color);
-    border-radius: 8px;
+    border-radius: 6px;
     box-shadow: var(--shadow-sm);
     padding: 0;
     min-width: 200px;
@@ -32,19 +40,17 @@
 }
 
 .overlay-header {
-    padding: 4px;
+    height: 6px;
+    min-height: 6px;
     cursor: move;
     user-select: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: var(--text-primary);
-    font-size: 12px;
-    border-top: 4px solid var(--primary-color);
-    border-radius: 8px 8px 0 0;
+    flex-shrink: 0;
 }
 
 .overlay-content {
+    background-color: var(--bg-white);
+    border-radius: 5px;
+    margin: 0 1px 1px 1px;
     padding: 8px;
     white-space: normal;
     overflow-y: auto;
@@ -110,7 +116,7 @@
 }
 
 .overlay-content a:hover {
-    background-color: rgba(123, 112, 224, 0.1);
+    background-color: var(--primary-overlay);
 }
 
 .overlay-content code {
@@ -119,7 +125,8 @@
     border-radius: 4px;
     font-family: 'Courier New', Courier, monospace;
     font-size: 14px;
-    color: #d63384;
+    font-weight: 600;
+    color: var(--text-code);
 }
 
 .overlay-content pre {
@@ -162,7 +169,7 @@
     border-left: 4px solid var(--primary-color);
     padding-left: 12px;
     margin: 12px 0;
-    color: #666;
+    color: var(--text-secondary);
     font-style: italic;
     background-color: var(--bg-light-gray);
     padding: 8px 12px;
@@ -235,7 +242,7 @@
     background-color: var(--primary-color);
     color: var(--text-white);
     font-size: 16px;
-    border: 1px solid #6A5FD8;
+    border: 1px solid var(--primary-hover);
     border-radius: 50%;
     width: 36px;
     height: 36px;
@@ -249,8 +256,8 @@
 }
 
 .selection-button:hover {
-    background-color: #6A5FD8;
-    border-color: #5A4FCC;
+    background-color: var(--primary-hover);
+    border-color: var(--primary-active);
     color: var(--text-white);
 }
 
@@ -272,7 +279,7 @@
 .prompt-button {
     background-color: var(--bg-medium-gray);
     color: var(--text-primary);
-    border: 1px solid #bdbdbd;
+    border: 1px solid var(--border-medium);
     border-radius: 18px;
     width: fit-content;
     box-sizing: border-box;
@@ -282,8 +289,8 @@
 }
 
 .prompt-button:hover {
-    background-color: #d0d0d0;
-    border-color: #a0a0a0;
+    background-color: var(--bg-hover);
+    border-color: var(--border-hover);
     color: var(--text-primary);
 }
 

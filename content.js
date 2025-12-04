@@ -114,7 +114,11 @@ async function handlePromptSelection(prompt, selectedText, storage, button, orig
     }
 
     const result = await storage.sync.get(['apiUrl', 'apiToken', 'modelName']);
-    if (!result.apiUrl || !result.apiToken || !result.modelName) {
+
+    // Use prompt-specific model if available, otherwise use global model
+    const modelName = prompt.modelName || result.modelName;
+
+    if (!result.apiUrl || !result.apiToken || !modelName) {
         alert('Error: API settings are not configured. Please configure the extension.');
         // Restore button
         button.textContent = originalText;
@@ -132,7 +136,7 @@ async function handlePromptSelection(prompt, selectedText, storage, button, orig
             action: 'callAPI',
             apiUrl: result.apiUrl,
             apiToken: result.apiToken,
-            modelName: result.modelName,
+            modelName: modelName,
             fullPrompt: fullPrompt
         }, (response) => {
             // Remove menu after receiving response
@@ -218,7 +222,11 @@ async function startPrefetch(prompt, selectedText, storage) {
     };
 
     const result = await storage.sync.get(['apiUrl', 'apiToken', 'modelName']);
-    if (!result.apiUrl || !result.apiToken || !result.modelName) {
+
+    // Use prompt-specific model if available, otherwise use global model
+    const modelName = prompt.modelName || result.modelName;
+
+    if (!result.apiUrl || !result.apiToken || !modelName) {
         prefetchCache[cacheKey] = {
             status: 'error',
             result: 'API settings not configured',
@@ -238,7 +246,7 @@ async function startPrefetch(prompt, selectedText, storage) {
             action: 'callAPI',
             apiUrl: result.apiUrl,
             apiToken: result.apiToken,
-            modelName: result.modelName,
+            modelName: modelName,
             fullPrompt: fullPrompt
         }, (response) => {
             // Only update cache if this is still the same selection session
@@ -655,11 +663,6 @@ function createOverlayContainer(overlayWidth) {
 function createOverlayHeader() {
     const header = document.createElement('div');
     header.className = 'overlay-header';
-
-    const title = document.createElement('span');
-    title.textContent = '';
-    header.appendChild(title);
-
     return header;
 }
 
@@ -755,19 +758,25 @@ function sanitizeParsedMarkdown(unsafeHTML) {
 }
 
 // Function to create overlay content
-function createOverlayContent(text) {
+function createOverlayContent(text, enableMarkdown = true) {
     const content = document.createElement('div');
     content.className = 'overlay-content';
-    const unsafeHtml = parseMarkdown(text);
-    const sanitizedHtml = sanitizeParsedMarkdown(unsafeHtml);
 
-    // Parse sanitized HTML safely using DOMParser to avoid innerHTML security issues
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(sanitizedHtml, 'text/html');
+    if (enableMarkdown) {
+        const unsafeHtml = parseMarkdown(text);
+        const sanitizedHtml = sanitizeParsedMarkdown(unsafeHtml);
 
-    // Append all child nodes from parsed document body
-    while (doc.body.firstChild) {
-        content.appendChild(doc.body.firstChild);
+        // Parse sanitized HTML safely using DOMParser to avoid innerHTML security issues
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(sanitizedHtml, 'text/html');
+
+        // Append all child nodes from parsed document body
+        while (doc.body.firstChild) {
+            content.appendChild(doc.body.firstChild);
+        }
+    } else {
+        // Display as plain text without markdown parsing
+        content.textContent = text;
     }
 
     return content;
@@ -795,15 +804,16 @@ function assembleAndAddOverlay(header, content) {
 function createResultOverlay(text) {
     removeResultOverlay();
 
-    // Load overlay size settings
+    // Load overlay size settings and markdown preference
     const storage = getStorage();
-    storage.sync.get(['resultWidth', 'resultHeight'], function (result) {
+    storage.sync.get(['resultWidth', 'resultHeight', 'enableMarkdown'], function (result) {
         const resultWidth = result.resultWidth;
         const resultHeight = result.resultHeight;
+        const enableMarkdown = result.enableMarkdown !== undefined ? result.enableMarkdown : true;
 
         const overlayContainer = createOverlayContainer(resultWidth);
         const header = createOverlayHeader();
-        const content = createOverlayContent(text);
+        const content = createOverlayContent(text, enableMarkdown);
         addDragFunctionality(header);
         assembleAndAddOverlay(header, content);
 
@@ -927,6 +937,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const prompt = prompts[request.promptIndex];
 
             if (prompt) {
+                // Use model from context menu request if available, otherwise use prompt's model
+                if (request.promptModel) {
+                    prompt.modelName = request.promptModel;
+                }
+
                 // Determine what text to use
                 let textToUse = (request.selectedText || '').trim();
 

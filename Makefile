@@ -1,7 +1,9 @@
-FILES = manifest.json popup.html options.html content.css global.css \
-        background.js content.js options.js popup.js \
-		markdown-parser.js \
-        images/icon16.png images/icon48.png images/icon128.png
+HTML_FILES = $(wildcard *.html)
+CSS_FILES = $(wildcard *.css)
+JS_FILES = $(wildcard *.js)
+PNG_FILES = $(wildcard images/*.png)
+
+FILES = manifest.json $(HTML_FILES) $(CSS_FILES) $(JS_FILES) $(PNG_FILES)
 
 all: clean build
 

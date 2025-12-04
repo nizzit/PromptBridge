@@ -87,12 +87,22 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         const promptIndex = parseInt(info.menuItemId.replace('prompt-', ''));
         const selectedText = (info.selectionText || '').trim();
 
-        // Send message to content script to handle prompt
-        chrome.tabs.sendMessage(tab.id, {
-            action: 'executePrompt',
-            promptIndex: promptIndex,
-            selectedText: selectedText,
-            useFullPageIfNoSelection: true
+        // Get the prompt to determine if it has a specific model
+        const storage = getStorage();
+        storage.sync.get(['prompts'], function (result) {
+            const prompts = result.prompts || [];
+            const prompt = prompts[promptIndex];
+
+            if (prompt) {
+                // Send message to content script to handle prompt
+                chrome.tabs.sendMessage(tab.id, {
+                    action: 'executePrompt',
+                    promptIndex: promptIndex,
+                    selectedText: selectedText,
+                    useFullPageIfNoSelection: true,
+                    promptModel: prompt.modelName || null
+                });
+            }
         });
     }
 });

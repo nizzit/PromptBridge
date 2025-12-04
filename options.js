@@ -1,5 +1,6 @@
 // Editing state
 let editingIndex = null;
+let addingNewPrompt = false;
 
 // Default result window size
 const DEFAULT_RESULT_WIDTH = 500;
@@ -13,10 +14,7 @@ function getStorage() {
 document.addEventListener('DOMContentLoaded', function () {
     const saveButton = document.getElementById('save-settings');
     const getModelsButton = document.getElementById('get-models');
-    const settingsStatusMessage = document.getElementById('settings-status-message');
-    const promptsStatusMessage = document.getElementById('prompts-status-message');
     const addPromptButton = document.getElementById('add-prompt');
-    const cancelEditButton = document.getElementById('cancel-edit');
     const exportButton = document.getElementById('export-settings');
     const importButton = document.getElementById('import-settings');
     const importFileInput = document.getElementById('import-file');
@@ -26,17 +24,34 @@ document.addEventListener('DOMContentLoaded', function () {
     loadPrompts();
     loadVersion();
 
+    // Add event listeners for auto-fetching models when URL or token changes
+    const apiUrlInput = document.getElementById('api-url');
+    const apiTokenInput = document.getElementById('api-token');
+
+    apiUrlInput.addEventListener('input', handleApiCredentialsChange);
+    apiTokenInput.addEventListener('input', handleApiCredentialsChange);
+
+    // Add event listeners to clear error highlighting when user starts typing
+    apiUrlInput.addEventListener('input', function () {
+        if (this.value.trim()) {
+            this.classList.remove('border-error');
+        }
+    });
+
+    apiTokenInput.addEventListener('input', function () {
+        if (this.value.trim()) {
+            this.classList.remove('border-error');
+        }
+    });
+
     // Save settings handler
     saveButton.addEventListener('click', saveSettings);
 
     // Get models handler
     getModelsButton.addEventListener('click', fetchModels);
 
-    // Add/Update prompt handler
+    // Add prompt handler
     addPromptButton.addEventListener('click', addPrompt);
-
-    // Cancel edit handler
-    cancelEditButton.addEventListener('click', cancelEdit);
 
     // Export settings handler
     exportButton.addEventListener('click', exportSettings);
@@ -52,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Load settings function
 function loadSettings() {
     const storage = getStorage();
-    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight'], function (result) {
+    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight', 'enableMarkdown'], function (result) {
         if (result.apiUrl) {
             document.getElementById('api-url').value = result.apiUrl;
         }
@@ -103,7 +118,67 @@ function loadSettings() {
         const resultHeight = result.resultHeight || DEFAULT_RESULT_HEIGHT;
         document.getElementById('result-width').value = resultWidth;
         document.getElementById('result-height').value = resultHeight;
+
+        // Load markdown parsing setting (default to true)
+        const enableMarkdown = result.enableMarkdown !== undefined ? result.enableMarkdown : true;
+        document.getElementById('enable-markdown').checked = enableMarkdown;
+
+        // Auto-fetch models if URL and token are available
+        if (result.apiUrl && result.apiToken) {
+            // Small delay to ensure UI is ready
+            setTimeout(() => {
+                fetchModels();
+            }, 100);
+        }
     });
+}
+
+// Handle API credentials change
+function handleApiCredentialsChange() {
+    const apiUrl = document.getElementById('api-url').value;
+    const apiToken = document.getElementById('api-token').value;
+
+    // Clear any previous error highlights
+    clearApiFieldErrors();
+
+    // Auto-fetch models if both URL and token are provided
+    if (apiUrl && apiToken) {
+        // Validate URL format before fetching
+        try {
+            new URL(apiUrl);
+            fetchModels();
+        } catch (e) {
+            // Invalid URL format, don't fetch
+            return;
+        }
+    }
+}
+
+// Clear API field error highlights
+function clearApiFieldErrors() {
+    document.getElementById('api-url').classList.remove('border-error');
+    document.getElementById('api-token').classList.remove('border-error');
+}
+
+// Highlight API field with error
+function highlightApiFieldError(fieldType, message) {
+    clearApiFieldErrors();
+
+    const fieldMap = {
+        'url': 'api-url',
+        'token': 'api-token',
+        'both': ['api-url', 'api-token']
+    };
+
+    const fieldsToHighlight = fieldMap[fieldType] || fieldMap['both'];
+
+    if (Array.isArray(fieldsToHighlight)) {
+        fieldsToHighlight.forEach(fieldId => {
+            document.getElementById(fieldId).classList.add('border-error');
+        });
+    } else {
+        document.getElementById(fieldsToHighlight).classList.add('border-error');
+    }
 }
 
 // Save settings function
@@ -114,6 +189,7 @@ function saveSettings() {
     const menuPosition = document.querySelector('input[name="menu-position"]:checked')?.value || 'middle-center';
     const openOnHover = document.getElementById('open-on-hover').checked;
     const prefetchTiming = document.querySelector('input[name="prefetch-timing"]:checked')?.value || 'on-button';
+    const enableMarkdown = document.getElementById('enable-markdown').checked;
 
     const resultWidthInput = document.getElementById('result-width');
     const resultHeightInput = document.getElementById('result-height');
@@ -122,7 +198,14 @@ function saveSettings() {
 
     // Validation
     if (!apiUrl || !apiToken || !modelName) {
-        showStatus('All fields are required!', 'red', 'settings');
+        // Highlight empty fields
+        if (!apiUrl) {
+            document.getElementById('api-url').classList.add('border-error');
+        }
+        if (!apiToken) {
+            document.getElementById('api-token').classList.add('border-error');
+        }
+
         return;
     }
 
@@ -132,11 +215,9 @@ function saveSettings() {
     const widthMax = parseInt(resultWidthInput.max);
 
     if (isNaN(resultWidth) || resultWidth <= 0) {
-        showStatus('Width must be a positive number!', 'red', 'settings');
         return;
     }
     if (resultWidth < widthMin || resultWidth > widthMax) {
-        showStatus(`Width must be between ${widthMin} and ${widthMax} pixels!`, 'red', 'settings');
         return;
     }
 
@@ -146,11 +227,9 @@ function saveSettings() {
     const heightMax = parseInt(resultHeightInput.max);
 
     if (isNaN(resultHeight) || resultHeight <= 0) {
-        showStatus('Height must be a positive number!', 'red', 'settings');
         return;
     }
     if (resultHeight < heightMin || resultHeight > heightMax) {
-        showStatus(`Height must be between ${heightMin} and ${heightMax} pixels!`, 'red', 'settings');
         return;
     }
 
@@ -164,15 +243,17 @@ function saveSettings() {
         openOnHover: openOnHover,
         prefetchTiming: prefetchTiming,
         resultWidth: resultWidth,
-        resultHeight: resultHeight
+        resultHeight: resultHeight,
+        enableMarkdown: enableMarkdown
     }, function () {
         // Check for errors (Chrome)
         const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
 
         if (lastError) {
-            showStatus('Save error: ' + lastError.message, 'red', 'settings');
+            console.error('Save error:', lastError.message);
         } else {
-            showStatus('Settings saved successfully!', 'green', 'settings');
+            // Clear any field errors on successful save
+            clearApiFieldErrors();
         }
     });
 }
@@ -183,7 +264,7 @@ async function fetchModels() {
     const apiToken = document.getElementById('api-token').value;
 
     if (!apiUrl || !apiToken) {
-        showStatus('Please provide URL and token for testing', 'red', 'settings');
+        highlightApiFieldError('both', 'Please provide URL and token for testing');
         return;
     }
 
@@ -191,17 +272,15 @@ async function fetchModels() {
     try {
         new URL(apiUrl);
     } catch (e) {
-        showStatus('Invalid URL format', 'red', 'settings');
+        highlightApiFieldError('url', 'Invalid URL format');
         return;
     }
-
-    showStatus('Testing connection...', 'blue', 'settings');
 
     try {
         // Use OpenRouter-compatible endpoint /models
         const testUrl = apiUrl.endsWith('/')
-            ? `${apiUrl}models`
-            : `${apiUrl}/models`;
+            ? `${apiUrl}models/user`
+            : `${apiUrl}/models/user`;
 
         const response = await fetch(testUrl, {
             method: 'GET',
@@ -212,7 +291,10 @@ async function fetchModels() {
         });
 
         if (!response.ok) {
-            showStatus(`Error: ${response.status} ${response.statusText}`, 'red', 'settings');
+            // If 401, highlight token field (authentication error)
+            // Otherwise, highlight URL field (connection/server error)
+            const fieldToHighlight = response.status === 401 ? 'token' : 'url';
+            highlightApiFieldError(fieldToHighlight, `Error: ${response.status} ${response.statusText}`);
             return;
         }
 
@@ -220,11 +302,12 @@ async function fetchModels() {
         const data = await response.json();
 
         if (!data.data || !Array.isArray(data.data)) {
-            showStatus('Response does not match OpenRouter API format', 'red', 'settings');
+            highlightApiFieldError('both', 'Response does not match OpenRouter API format');
             return;
         }
 
-        showStatus(`Found ${data.data.length} models`, 'green', 'settings');
+        // Clear any previous field errors on success
+        clearApiFieldErrors();
 
         // Get currently saved model name to preserve selection
         const modelSelect = document.getElementById('model-name');
@@ -253,45 +336,12 @@ async function fetchModels() {
 
     } catch (error) {
         if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-            showStatus('Network error: check URL and CORS settings', 'red', 'settings');
+            highlightApiFieldError('both', 'Network error: check URL and CORS settings');
         } else if (error instanceof SyntaxError) {
-            showStatus('Invalid response format from server', 'red', 'settings');
+            highlightApiFieldError('both', 'Invalid response format from server');
         } else {
-            showStatus('Connection error: ' + error.message, 'red', 'settings');
+            highlightApiFieldError('both', 'Connection error: ' + error.message);
         }
-    }
-}
-
-// Helper function to show status
-function showStatus(message, color, target = 'settings') {
-    let statusElementId;
-    if (target === 'prompts') {
-        statusElementId = 'prompts-status-message';
-    } else if (target === 'import-export') {
-        statusElementId = 'import-export-status';
-    } else {
-        statusElementId = 'settings-status-message';
-    }
-
-    const statusMessage = document.getElementById(statusElementId);
-
-    if (!statusMessage) return;
-
-    // Map color names to CSS variables
-    const colorMap = {
-        'red': 'var(--status-error)',
-        'green': 'var(--status-success)',
-        'blue': 'var(--status-info)'
-    };
-
-    statusMessage.textContent = message;
-    statusMessage.style.color = colorMap[color] || color;
-
-    // Auto-hide message after 3 seconds for successful operations
-    if (color === 'green') {
-        setTimeout(() => {
-            statusMessage.textContent = '';
-        }, 3000);
     }
 }
 
@@ -311,111 +361,457 @@ function displayPrompts(prompts) {
 
     if (prompts.length === 0) {
         promptsList.innerHTML = '<p>No prompts saved yet.</p>';
-        return;
+    } else {
+        prompts.forEach((prompt, index) => {
+            // Check if this prompt is currently being edited
+            if (editingIndex === index) {
+                displayEditForm(promptsList, prompt, index);
+            } else {
+                displayPromptCard(promptsList, prompt, index);
+            }
+        });
     }
 
-    prompts.forEach((prompt, index) => {
-        const promptArticle = document.createElement('article');
+    // If we're adding a new prompt, show the add form after existing prompts
+    if (addingNewPrompt) {
+        displayAddForm(promptsList);
+    }
 
-        const headerDiv = document.createElement('div');
-        headerDiv.className = 'prompt-header';
+    // Update Add Prompt button visibility
+    updateAddButtonVisibility();
+}
 
-        const nameLabel = document.createElement('strong');
-        nameLabel.textContent = prompt.name;
-        headerDiv.appendChild(nameLabel);
+// Display a single prompt card
+function displayPromptCard(container, prompt, index) {
+    const promptArticle = document.createElement('article');
+    promptArticle.id = `prompt-${index}`;
 
-        if (prompt.useFullPage) {
-            const fullPageBadge = document.createElement('span');
-            fullPageBadge.className = 'full-page-badge';
-            fullPageBadge.textContent = 'Full Page';
-            headerDiv.appendChild(fullPageBadge);
-        }
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'prompt-header';
 
-        if (prompt.prefetch) {
-            const prefetchBadge = document.createElement('span');
-            prefetchBadge.className = 'full-page-badge';
-            prefetchBadge.textContent = 'Prefetch';
-            headerDiv.appendChild(prefetchBadge);
-        }
+    const nameLabel = document.createElement('strong');
+    nameLabel.textContent = prompt.name;
+    headerDiv.appendChild(nameLabel);
 
-        promptArticle.appendChild(headerDiv);
+    if (prompt.useFullPage) {
+        const fullPageBadge = document.createElement('span');
+        fullPageBadge.className = 'badge';
+        fullPageBadge.textContent = 'Full Page';
+        headerDiv.appendChild(fullPageBadge);
+    }
 
-        const textPara = document.createElement('p');
-        textPara.className = 'prompt-text';
-        textPara.textContent = prompt.text;
-        promptArticle.appendChild(textPara);
+    if (prompt.prefetch) {
+        const prefetchBadge = document.createElement('span');
+        prefetchBadge.className = 'badge';
+        prefetchBadge.textContent = 'Prefetch';
+        headerDiv.appendChild(prefetchBadge);
+    }
 
-        const editButton = document.createElement('button');
-        editButton.textContent = 'Edit';
-        editButton.addEventListener('click', function () {
-            editPrompt(index);
-        });
-        promptArticle.appendChild(editButton);
+    if (prompt.modelName) {
+        const modelBadge = document.createElement('span');
+        modelBadge.className = 'badge';
 
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', function () {
-            deletePrompt(index);
-        });
-        promptArticle.appendChild(deleteButton);
+        // Extract model name after the slash, or use full name if no slash
+        const modelDisplayName = prompt.modelName.includes('/')
+            ? prompt.modelName.split('/').pop()
+            : prompt.modelName;
 
-        promptsList.appendChild(promptArticle);
+        modelBadge.textContent = modelDisplayName;
+        headerDiv.appendChild(modelBadge);
+    }
+
+    promptArticle.appendChild(headerDiv);
+
+    const textPara = document.createElement('p');
+    textPara.className = 'prompt-text';
+    textPara.textContent = prompt.text;
+    promptArticle.appendChild(textPara);
+
+    const editButton = document.createElement('button');
+    editButton.textContent = 'Edit';
+    editButton.addEventListener('click', function () {
+        editPrompt(index);
     });
+    promptArticle.appendChild(editButton);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.className = 'delete-button';
+    deleteButton.addEventListener('click', function () {
+        handleDeleteClick(this, index);
+    });
+    deleteButton.addEventListener('mouseleave', function () {
+        resetDeleteButton(this);
+    });
+    promptArticle.appendChild(deleteButton);
+
+    container.appendChild(promptArticle);
+}
+
+// Display edit form for a prompt
+function displayEditForm(container, prompt, index) {
+    const editArticle = document.createElement('article');
+    editArticle.id = `prompt-edit-${index}`;
+    editArticle.className = 'edit-form';
+
+    // Form title
+    const titleHeader = document.createElement('h3');
+    titleHeader.textContent = 'Edit Prompt';
+    editArticle.appendChild(titleHeader);
+
+    // Name field
+    const nameRow = document.createElement('div');
+    nameRow.className = 'form-row';
+
+    const nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Title';
+    nameLabel.htmlFor = `edit-name-${index}`;
+    nameRow.appendChild(nameLabel);
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.id = `edit-name-${index}`;
+    nameInput.value = prompt.name;
+    nameInput.addEventListener('focus', function () {
+        this.classList.remove('border-error');
+    });
+    nameRow.appendChild(nameInput);
+    editArticle.appendChild(nameRow);
+
+    // Text field
+    const textRow = document.createElement('div');
+    textRow.className = 'form-row';
+
+    const textLabel = document.createElement('label');
+    textLabel.textContent = 'Prompt';
+    textLabel.htmlFor = `edit-text-${index}`;
+    textRow.appendChild(textLabel);
+
+    const textInput = document.createElement('textarea');
+    textInput.id = `edit-text-${index}`;
+    textInput.rows = 5;
+    textInput.value = prompt.text;
+    textInput.addEventListener('focus', function () {
+        this.classList.remove('border-error');
+    });
+    textRow.appendChild(textInput);
+    editArticle.appendChild(textRow);
+
+    // Full page option
+    const fullPageRow = document.createElement('div');
+    fullPageRow.className = 'form-row';
+
+    const fullPageLabel = document.createElement('label');
+    fullPageLabel.textContent = 'Use full page text if no selection';
+    fullPageLabel.htmlFor = `edit-fullpage-${index}`;
+
+    const fullPageInput = document.createElement('input');
+    fullPageInput.type = 'checkbox';
+    fullPageInput.id = `edit-fullpage-${index}`;
+    fullPageInput.checked = prompt.useFullPage || false;
+    fullPageInput.className = 'align-right';
+
+    fullPageRow.appendChild(fullPageLabel);
+    fullPageRow.appendChild(fullPageInput);
+    editArticle.appendChild(fullPageRow);
+
+    // Prefetch option
+    const prefetchRow = document.createElement('div');
+    prefetchRow.className = 'form-row';
+
+    const prefetchLabel = document.createElement('label');
+    prefetchLabel.textContent = 'Prefetch prompt result';
+    prefetchLabel.htmlFor = `edit-prefetch-${index}`;
+
+    const prefetchInput = document.createElement('input');
+    prefetchInput.type = 'checkbox';
+    prefetchInput.id = `edit-prefetch-${index}`;
+    prefetchInput.checked = prompt.prefetch || false;
+    prefetchInput.className = 'align-right';
+
+    prefetchRow.appendChild(prefetchLabel);
+    prefetchRow.appendChild(prefetchInput);
+    editArticle.appendChild(prefetchRow);
+
+    // Model selection row
+    const modelRow = document.createElement('div');
+    modelRow.className = 'form-row';
+
+    const modelLabel = document.createElement('label');
+    modelLabel.textContent = 'Model';
+    modelLabel.htmlFor = `edit-model-${index}`;
+    modelRow.appendChild(modelLabel);
+
+    const modelSelectContainer = document.createElement('div');
+    modelSelectContainer.className = 'model-select-container';
+
+    const modelSelect = document.createElement('select');
+    modelSelect.id = `edit-model-${index}`;
+    modelSelect.className = 'model-select';
+
+    // Add empty option as default
+    const emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = 'default';
+    emptyOption.selected = !prompt.modelName;
+    modelSelect.appendChild(emptyOption);
+
+    // Get available models from global dropdown
+    const globalModelSelect = document.getElementById('model-name');
+    if (globalModelSelect && globalModelSelect.options.length > 1) {
+        // Copy options from global model dropdown
+        for (let i = 1; i < globalModelSelect.options.length; i++) {
+            const option = document.createElement('option');
+            option.value = globalModelSelect.options[i].value;
+            option.textContent = globalModelSelect.options[i].textContent;
+            if (prompt.modelName === option.value) {
+                option.selected = true;
+            }
+            modelSelect.appendChild(option);
+        }
+    }
+
+    modelSelectContainer.appendChild(modelSelect);
+    modelRow.appendChild(modelSelectContainer);
+    editArticle.appendChild(modelRow);
+
+    // Buttons container
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'button-with-status';
+
+    // Save button
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Save';
+    saveButton.addEventListener('click', function () {
+        saveEditedPrompt(index);
+    });
+    buttonsContainer.appendChild(saveButton);
+
+    // Cancel button
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.className = 'secondary';
+    cancelButton.addEventListener('click', function () {
+        cancelInlineEdit();
+    });
+    buttonsContainer.appendChild(cancelButton);
+
+
+    editArticle.appendChild(buttonsContainer);
+    container.appendChild(editArticle);
+}
+
+// Display add form for a new prompt
+function displayAddForm(container) {
+    const addArticle = document.createElement('article');
+    addArticle.id = 'prompt-add-form';
+    addArticle.className = 'edit-form';
+
+    // Form title
+    const titleHeader = document.createElement('h3');
+    titleHeader.textContent = 'Add New Prompt';
+    addArticle.appendChild(titleHeader);
+
+    // Name field
+    const nameRow = document.createElement('div');
+    nameRow.className = 'form-row';
+
+    const nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Prompt name';
+    nameLabel.htmlFor = 'add-name';
+    nameRow.appendChild(nameLabel);
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.id = 'add-name';
+    nameInput.placeholder = 'Enter prompt name';
+    nameInput.addEventListener('focus', function () {
+        this.classList.remove('border-error');
+    });
+    nameRow.appendChild(nameInput);
+    addArticle.appendChild(nameRow);
+
+    // Text field
+    const textRow = document.createElement('div');
+    textRow.className = 'form-row';
+
+    const textLabel = document.createElement('label');
+    textLabel.textContent = 'Prompt text';
+    textLabel.htmlFor = 'add-text';
+    textRow.appendChild(textLabel);
+
+    const textInput = document.createElement('textarea');
+    textInput.id = 'add-text';
+    textInput.rows = 5;
+    textInput.placeholder = 'Enter prompt text';
+    textInput.addEventListener('focus', function () {
+        this.classList.remove('border-error');
+    });
+    textRow.appendChild(textInput);
+    addArticle.appendChild(textRow);
+
+    // Full page option
+    const fullPageRow = document.createElement('div');
+    fullPageRow.className = 'form-row';
+
+    const fullPageLabel = document.createElement('label');
+    fullPageLabel.textContent = 'Use full page text if no selection';
+    fullPageLabel.htmlFor = 'add-fullpage';
+
+    const fullPageInput = document.createElement('input');
+    fullPageInput.type = 'checkbox';
+    fullPageInput.id = 'add-fullpage';
+    fullPageInput.checked = false;
+    fullPageInput.className = 'align-right';
+
+    fullPageRow.appendChild(fullPageLabel);
+    fullPageRow.appendChild(fullPageInput);
+    addArticle.appendChild(fullPageRow);
+
+    // Prefetch option
+    const prefetchRow = document.createElement('div');
+    prefetchRow.className = 'form-row';
+
+    const prefetchLabel = document.createElement('label');
+    prefetchLabel.textContent = 'Prefetch prompt result';
+    prefetchLabel.htmlFor = 'add-prefetch';
+
+    const prefetchInput = document.createElement('input');
+    prefetchInput.type = 'checkbox';
+    prefetchInput.id = 'add-prefetch';
+    prefetchInput.checked = false;
+    prefetchInput.className = 'align-right';
+
+    prefetchRow.appendChild(prefetchLabel);
+    prefetchRow.appendChild(prefetchInput);
+    addArticle.appendChild(prefetchRow);
+
+    // Model selection row
+    const modelRow = document.createElement('div');
+    modelRow.className = 'form-row';
+
+    const modelLabel = document.createElement('label');
+    modelLabel.textContent = 'Model';
+    modelLabel.htmlFor = 'add-model';
+    modelRow.appendChild(modelLabel);
+
+    const modelSelectContainer = document.createElement('div');
+    modelSelectContainer.className = 'model-select-container';
+
+    const modelSelect = document.createElement('select');
+    modelSelect.id = 'add-model';
+    modelSelect.className = 'model-select';
+
+    // Add empty option as default
+    const emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = 'default';
+    emptyOption.selected = true;
+    modelSelect.appendChild(emptyOption);
+
+    // Get available models from global dropdown
+    const globalModelSelect = document.getElementById('model-name');
+    if (globalModelSelect && globalModelSelect.options.length > 1) {
+        // Copy options from global model dropdown
+        for (let i = 1; i < globalModelSelect.options.length; i++) {
+            const option = document.createElement('option');
+            option.value = globalModelSelect.options[i].value;
+            option.textContent = globalModelSelect.options[i].textContent;
+            modelSelect.appendChild(option);
+        }
+    }
+
+    modelSelectContainer.appendChild(modelSelect);
+    modelRow.appendChild(modelSelectContainer);
+    addArticle.appendChild(modelRow);
+
+    // Buttons container
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'button-with-status';
+
+    // Save button
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Save';
+    saveButton.addEventListener('click', function () {
+        saveNewPrompt();
+    });
+    buttonsContainer.appendChild(saveButton);
+
+    // Cancel button
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.className = 'secondary';
+    cancelButton.addEventListener('click', function () {
+        cancelAddForm();
+    });
+    buttonsContainer.appendChild(cancelButton);
+
+    addArticle.appendChild(buttonsContainer);
+    container.appendChild(addArticle);
+}
+
+// Update Add Prompt button visibility based on editing state
+function updateAddButtonVisibility() {
+    const addButton = document.getElementById('add-prompt');
+    if (addButton) {
+        // Hide button if we're editing or adding a prompt
+        if (editingIndex !== null || addingNewPrompt) {
+            addButton.style.display = 'none';
+        } else {
+            addButton.style.display = '';
+        }
+    }
+}
+
+// Helper function to scroll to an element after it's rendered
+function scrollToElement(elementId) {
+    setTimeout(() => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+    }, 100);
 }
 
 // Add or update prompt function
 function addPrompt() {
-    const promptName = document.getElementById('prompt-name').value.trim();
-    const promptText = document.getElementById('prompt-text').value.trim();
-    const useFullPage = document.getElementById('use-full-page').checked;
-    const prefetch = document.getElementById('prefetch').checked;
-
-    if (!promptName || !promptText) {
-        showStatus('Please provide both prompt name and text', 'red', 'prompts');
+    if (addingNewPrompt) {
+        // If we're already adding a new prompt, do nothing
         return;
     }
 
-    const storage = getStorage();
-    storage.sync.get(['prompts'], function (result) {
-        const prompts = result.prompts || [];
+    // Set flag to indicate we're adding a new prompt
+    addingNewPrompt = true;
+    editingIndex = null; // Reset editing index
 
-        if (editingIndex !== null) {
-            // Update existing prompt
-            prompts[editingIndex] = {
-                name: promptName,
-                text: promptText,
-                useFullPage: useFullPage,
-                prefetch: prefetch
-            };
-        } else {
-            // Add new prompt
-            prompts.push({
-                name: promptName,
-                text: promptText,
-                useFullPage: useFullPage,
-                prefetch: prefetch
-            });
-        }
+    // Reload prompts to show the add form
+    loadPrompts();
 
-        storage.sync.set({ prompts: prompts }, function () {
-            const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
+    // Scroll to the add form after it's rendered
+    scrollToElement('prompt-add-form');
+}
 
-            if (lastError) {
-                showStatus('Error saving prompt: ' + lastError.message, 'red', 'prompts');
-            } else {
-                const message = editingIndex !== null ? 'Prompt updated successfully!' : 'Prompt added successfully!';
-                showStatus(message, 'green', 'prompts');
-                document.getElementById('prompt-name').value = '';
-                document.getElementById('prompt-text').value = '';
-                document.getElementById('use-full-page').checked = false;
-                document.getElementById('prefetch').checked = false;
-                editingIndex = null;
-                document.getElementById('add-prompt').textContent = 'Add Prompt';
-                document.getElementById('cancel-edit').style.display = 'none';
-                loadPrompts();
-            }
-        });
-    });
+// Handle delete button click with confirmation
+function handleDeleteClick(button, index) {
+    if (button.dataset.confirmState === 'true') {
+        // Second click - actually delete
+        deletePrompt(index);
+    } else {
+        // First click - show confirmation
+        button.dataset.confirmState = 'true';
+        // Styles are now handled by CSS class in global.css
+    }
+}
+
+// Reset delete button to original state
+function resetDeleteButton(button) {
+    if (button.dataset.confirmState === 'true') {
+        button.dataset.confirmState = 'false';
+        // Styles are now handled by CSS class in global.css
+    }
 }
 
 // Delete prompt function
@@ -429,9 +825,8 @@ function deletePrompt(index) {
             const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
 
             if (lastError) {
-                showStatus('Error deleting prompt: ' + lastError.message, 'red', 'prompts');
+                console.error('Error deleting prompt:', lastError.message);
             } else {
-                showStatus('Prompt deleted successfully!', 'green', 'prompts');
                 loadPrompts();
             }
         });
@@ -440,34 +835,148 @@ function deletePrompt(index) {
 
 // Edit prompt function
 function editPrompt(index) {
-    const storage = getStorage();
-    storage.sync.get(['prompts'], function (result) {
-        const prompts = result.prompts || [];
-        const prompt = prompts[index];
+    editingIndex = index;
+    loadPrompts(); // Reload prompts to show the edit form
 
-        if (prompt) {
-            document.getElementById('prompt-name').value = prompt.name;
-            document.getElementById('prompt-text').value = prompt.text;
-            document.getElementById('use-full-page').checked = prompt.useFullPage || false;
-            document.getElementById('prefetch').checked = prompt.prefetch || false;
-            editingIndex = index;
-            document.getElementById('add-prompt').textContent = 'Update Prompt';
-            document.getElementById('cancel-edit').style.display = 'inline';
-            showStatus('Editing prompt...', 'blue', 'prompts');
-        }
-    });
+    // Scroll to the edit form after it's rendered
+    scrollToElement(`prompt-edit-${index}`);
 }
 
 // Cancel edit function
 function cancelEdit() {
-    document.getElementById('prompt-name').value = '';
-    document.getElementById('prompt-text').value = '';
-    document.getElementById('use-full-page').checked = false;
-    document.getElementById('prefetch').checked = false;
     editingIndex = null;
-    document.getElementById('add-prompt').textContent = 'Add Prompt';
-    document.getElementById('cancel-edit').style.display = 'none';
-    showStatus('Edit cancelled', 'blue', 'prompts');
+    loadPrompts();
+}
+
+// Cancel add form function
+function cancelAddForm() {
+    addingNewPrompt = false;
+    loadPrompts();
+}
+
+// Helper function to clear and show field errors
+function showFieldErrors(nameInput, textInput) {
+    // Clear previous error classes
+    nameInput.classList.remove('border-error');
+    textInput.classList.remove('border-error');
+
+    // Add error classes to empty fields
+    if (!nameInput.value.trim()) {
+        nameInput.classList.add('border-error');
+    }
+    if (!textInput.value.trim()) {
+        textInput.classList.add('border-error');
+    }
+}
+
+// Save new prompt function
+function saveNewPrompt() {
+    const nameInput = document.getElementById('add-name');
+    const textInput = document.getElementById('add-text');
+    const fullPageInput = document.getElementById('add-fullpage');
+    const prefetchInput = document.getElementById('add-prefetch');
+    const modelSelect = document.getElementById('add-model');
+
+    const promptName = nameInput.value.trim();
+    const promptText = textInput.value.trim();
+    const useFullPage = fullPageInput.checked;
+    const prefetch = prefetchInput.checked;
+    const modelName = modelSelect.value; // Can be empty string for global model
+
+    if (!promptName || !promptText) {
+        showFieldErrors(nameInput, textInput);
+        console.error('Please provide both prompt name and text');
+        return;
+    }
+
+    const storage = getStorage();
+    storage.sync.get(['prompts'], function (result) {
+        const prompts = result.prompts || [];
+
+        // Add new prompt
+        const newPrompt = {
+            name: promptName,
+            text: promptText,
+            useFullPage: useFullPage,
+            prefetch: prefetch
+        };
+
+        // Only add modelName if it's not empty
+        if (modelName) {
+            newPrompt.modelName = modelName;
+        }
+
+        prompts.push(newPrompt);
+
+        storage.sync.set({ prompts: prompts }, function () {
+            const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
+
+            if (lastError) {
+                console.error('Error saving prompt:', lastError.message);
+            } else {
+                addingNewPrompt = false;
+                loadPrompts();
+            }
+        });
+    });
+}
+
+// Cancel inline edit function
+function cancelInlineEdit() {
+    editingIndex = null;
+    loadPrompts();
+}
+
+// Save edited prompt function
+function saveEditedPrompt(index) {
+    const nameInput = document.getElementById(`edit-name-${index}`);
+    const textInput = document.getElementById(`edit-text-${index}`);
+    const fullPageInput = document.getElementById(`edit-fullpage-${index}`);
+    const prefetchInput = document.getElementById(`edit-prefetch-${index}`);
+    const modelSelect = document.getElementById(`edit-model-${index}`);
+
+    const promptName = nameInput.value.trim();
+    const promptText = textInput.value.trim();
+    const useFullPage = fullPageInput.checked;
+    const prefetch = prefetchInput.checked;
+    const modelName = modelSelect.value; // Can be empty string for global model
+
+    if (!promptName || !promptText) {
+        showFieldErrors(nameInput, textInput);
+        console.error('Please provide both prompt name and text');
+        return;
+    }
+
+    const storage = getStorage();
+    storage.sync.get(['prompts'], function (result) {
+        const prompts = result.prompts || [];
+
+        // Update the prompt at the specified index
+        const updatedPrompt = {
+            name: promptName,
+            text: promptText,
+            useFullPage: useFullPage,
+            prefetch: prefetch
+        };
+
+        // Only add modelName if it's not empty
+        if (modelName) {
+            updatedPrompt.modelName = modelName;
+        }
+
+        prompts[index] = updatedPrompt;
+
+        storage.sync.set({ prompts: prompts }, function () {
+            const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
+
+            if (lastError) {
+                console.error('Error saving prompt:', lastError.message);
+            } else {
+                editingIndex = null;
+                loadPrompts();
+            }
+        });
+    });
 }
 
 // Export settings function
@@ -483,6 +992,7 @@ function exportSettings() {
         'prefetchTiming',
         'resultWidth',
         'resultHeight',
+        'enableMarkdown',
         'prompts'
     ], function (result) {
         // Create a JSON object with all settings
@@ -504,8 +1014,6 @@ function exportSettings() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-
-        showStatus('Settings exported successfully!', 'green', 'import-export');
     });
 }
 
@@ -521,14 +1029,13 @@ function importSettings(event) {
 
             // Validate the imported data
             if (!importData.settings) {
-                showStatus('Invalid settings file format', 'red', 'import-export');
+                console.error('Invalid settings file format');
                 return;
             }
 
             // Ask for confirmation
             const confirmMessage = `Import settings from ${importData.exportDate ? new Date(importData.exportDate).toLocaleString() : 'unknown date'}?\n\nThis will overwrite your current settings.`;
             if (!confirm(confirmMessage)) {
-                showStatus('Import cancelled', 'blue', 'import-export');
                 event.target.value = ''; // Reset file input
                 return;
             }
@@ -539,9 +1046,8 @@ function importSettings(event) {
                 const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
 
                 if (lastError) {
-                    showStatus('Error importing settings: ' + lastError.message, 'red', 'import-export');
+                    console.error('Error importing settings:', lastError.message);
                 } else {
-                    showStatus('Settings imported successfully!', 'green', 'import-export');
                     // Reload the page to reflect imported settings
                     setTimeout(() => {
                         location.reload();
@@ -550,7 +1056,7 @@ function importSettings(event) {
             });
 
         } catch (error) {
-            showStatus('Error parsing settings file: ' + error.message, 'red', 'import-export');
+            console.error('Error parsing settings file:', error.message);
         }
 
         // Reset file input
@@ -558,7 +1064,7 @@ function importSettings(event) {
     };
 
     reader.onerror = function () {
-        showStatus('Error reading file', 'red', 'import-export');
+        console.error('Error reading file');
         event.target.value = '';
     };
 
