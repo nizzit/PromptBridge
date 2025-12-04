@@ -655,11 +655,6 @@ function createOverlayContainer(overlayWidth) {
 function createOverlayHeader() {
     const header = document.createElement('div');
     header.className = 'overlay-header';
-
-    const title = document.createElement('span');
-    title.textContent = '';
-    header.appendChild(title);
-
     return header;
 }
 
