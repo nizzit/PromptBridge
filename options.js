@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Load settings function
 function loadSettings() {
     const storage = getStorage();
-    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight'], function (result) {
+    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight', 'enableMarkdown'], function (result) {
         if (result.apiUrl) {
             document.getElementById('api-url').value = result.apiUrl;
         }
@@ -103,6 +103,10 @@ function loadSettings() {
         const resultHeight = result.resultHeight || DEFAULT_RESULT_HEIGHT;
         document.getElementById('result-width').value = resultWidth;
         document.getElementById('result-height').value = resultHeight;
+
+        // Load markdown parsing setting (default to true)
+        const enableMarkdown = result.enableMarkdown !== undefined ? result.enableMarkdown : true;
+        document.getElementById('enable-markdown').checked = enableMarkdown;
     });
 }
 
@@ -114,6 +118,7 @@ function saveSettings() {
     const menuPosition = document.querySelector('input[name="menu-position"]:checked')?.value || 'middle-center';
     const openOnHover = document.getElementById('open-on-hover').checked;
     const prefetchTiming = document.querySelector('input[name="prefetch-timing"]:checked')?.value || 'on-button';
+    const enableMarkdown = document.getElementById('enable-markdown').checked;
 
     const resultWidthInput = document.getElementById('result-width');
     const resultHeightInput = document.getElementById('result-height');
@@ -164,7 +169,8 @@ function saveSettings() {
         openOnHover: openOnHover,
         prefetchTiming: prefetchTiming,
         resultWidth: resultWidth,
-        resultHeight: resultHeight
+        resultHeight: resultHeight,
+        enableMarkdown: enableMarkdown
     }, function () {
         // Check for errors (Chrome)
         const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
@@ -483,6 +489,7 @@ function exportSettings() {
         'prefetchTiming',
         'resultWidth',
         'resultHeight',
+        'enableMarkdown',
         'prompts'
     ], function (result) {
         // Create a JSON object with all settings

@@ -750,19 +750,25 @@ function sanitizeParsedMarkdown(unsafeHTML) {
 }
 
 // Function to create overlay content
-function createOverlayContent(text) {
+function createOverlayContent(text, enableMarkdown = true) {
     const content = document.createElement('div');
     content.className = 'overlay-content';
-    const unsafeHtml = parseMarkdown(text);
-    const sanitizedHtml = sanitizeParsedMarkdown(unsafeHtml);
 
-    // Parse sanitized HTML safely using DOMParser to avoid innerHTML security issues
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(sanitizedHtml, 'text/html');
+    if (enableMarkdown) {
+        const unsafeHtml = parseMarkdown(text);
+        const sanitizedHtml = sanitizeParsedMarkdown(unsafeHtml);
 
-    // Append all child nodes from parsed document body
-    while (doc.body.firstChild) {
-        content.appendChild(doc.body.firstChild);
+        // Parse sanitized HTML safely using DOMParser to avoid innerHTML security issues
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(sanitizedHtml, 'text/html');
+
+        // Append all child nodes from parsed document body
+        while (doc.body.firstChild) {
+            content.appendChild(doc.body.firstChild);
+        }
+    } else {
+        // Display as plain text without markdown parsing
+        content.textContent = text;
     }
 
     return content;
@@ -790,15 +796,16 @@ function assembleAndAddOverlay(header, content) {
 function createResultOverlay(text) {
     removeResultOverlay();
 
-    // Load overlay size settings
+    // Load overlay size settings and markdown preference
     const storage = getStorage();
-    storage.sync.get(['resultWidth', 'resultHeight'], function (result) {
+    storage.sync.get(['resultWidth', 'resultHeight', 'enableMarkdown'], function (result) {
         const resultWidth = result.resultWidth;
         const resultHeight = result.resultHeight;
+        const enableMarkdown = result.enableMarkdown !== undefined ? result.enableMarkdown : true;
 
         const overlayContainer = createOverlayContainer(resultWidth);
         const header = createOverlayHeader();
-        const content = createOverlayContent(text);
+        const content = createOverlayContent(text, enableMarkdown);
         addDragFunctionality(header);
         assembleAndAddOverlay(header, content);
 
