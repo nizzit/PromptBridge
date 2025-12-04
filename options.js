@@ -417,25 +417,23 @@ function displayPrompts(prompts) {
     const promptsList = document.getElementById('prompts-list');
     promptsList.innerHTML = '';
 
-    // If we're adding a new prompt, show the add form
-    if (addingNewPrompt) {
-        displayAddForm(promptsList);
-        return;
-    }
-
     if (prompts.length === 0) {
         promptsList.innerHTML = '<p>No prompts saved yet.</p>';
-        return;
+    } else {
+        prompts.forEach((prompt, index) => {
+            // Check if this prompt is currently being edited
+            if (editingIndex === index) {
+                displayEditForm(promptsList, prompt, index);
+            } else {
+                displayPromptCard(promptsList, prompt, index);
+            }
+        });
     }
 
-    prompts.forEach((prompt, index) => {
-        // Check if this prompt is currently being edited
-        if (editingIndex === index) {
-            displayEditForm(promptsList, prompt, index);
-        } else {
-            displayPromptCard(promptsList, prompt, index);
-        }
-    });
+    // If we're adding a new prompt, show the add form after existing prompts
+    if (addingNewPrompt) {
+        displayAddForm(promptsList);
+    }
 }
 
 // Display a single prompt card
@@ -867,6 +865,19 @@ function displayAddForm(container) {
     container.appendChild(addArticle);
 }
 
+// Helper function to scroll to an element after it's rendered
+function scrollToElement(elementId) {
+    setTimeout(() => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+    }, 100);
+}
+
 // Add or update prompt function
 function addPrompt() {
     if (addingNewPrompt) {
@@ -880,6 +891,9 @@ function addPrompt() {
 
     // Reload prompts to show the add form
     loadPrompts();
+
+    // Scroll to the add form after it's rendered
+    scrollToElement('prompt-add-form');
 }
 
 // Handle delete button click with confirmation
@@ -925,6 +939,9 @@ function deletePrompt(index) {
 function editPrompt(index) {
     editingIndex = index;
     loadPrompts(); // Reload prompts to show the edit form
+
+    // Scroll to the edit form after it's rendered
+    scrollToElement(`prompt-edit-${index}`);
 }
 
 // Cancel edit function
