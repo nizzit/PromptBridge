@@ -494,28 +494,13 @@ function displayEditForm(container, prompt, index) {
     textRow.appendChild(textInput);
     editArticle.appendChild(textRow);
 
-    // Full page option with tooltip on separate row
+    // Full page option
     const fullPageRow = document.createElement('div');
     fullPageRow.className = 'form-row';
 
-    const fullPageContainer = document.createElement('div');
-    fullPageContainer.className = 'tooltip-container';
-
     const fullPageLabel = document.createElement('label');
-    fullPageLabel.textContent = 'Use full page';
+    fullPageLabel.textContent = 'Use full page text if no selection';
     fullPageLabel.htmlFor = `edit-fullpage-${index}`;
-
-    const fullPageTooltipIcon = document.createElement('span');
-    fullPageTooltipIcon.className = 'tooltip-icon';
-    fullPageTooltipIcon.textContent = '?';
-
-    const fullPageTooltipText = document.createElement('span');
-    fullPageTooltipText.className = 'tooltip-text';
-    fullPageTooltipText.textContent = 'Use entire page text when nothing is selected';
-
-    fullPageTooltipIcon.appendChild(fullPageTooltipText);
-    fullPageContainer.appendChild(fullPageLabel);
-    fullPageContainer.appendChild(fullPageTooltipIcon);
 
     const fullPageInput = document.createElement('input');
     fullPageInput.type = 'checkbox';
@@ -523,32 +508,17 @@ function displayEditForm(container, prompt, index) {
     fullPageInput.checked = prompt.useFullPage || false;
     fullPageInput.className = 'align-right';
 
-    fullPageRow.appendChild(fullPageContainer);
+    fullPageRow.appendChild(fullPageLabel);
     fullPageRow.appendChild(fullPageInput);
     editArticle.appendChild(fullPageRow);
 
-    // Prefetch option with tooltip on separate row
+    // Prefetch option
     const prefetchRow = document.createElement('div');
     prefetchRow.className = 'form-row';
 
-    const prefetchContainer = document.createElement('div');
-    prefetchContainer.className = 'tooltip-container';
-
     const prefetchLabel = document.createElement('label');
-    prefetchLabel.textContent = 'Prefetch result';
+    prefetchLabel.textContent = 'Prefetch prompt result';
     prefetchLabel.htmlFor = `edit-prefetch-${index}`;
-
-    const prefetchTooltipIcon = document.createElement('span');
-    prefetchTooltipIcon.className = 'tooltip-icon';
-    prefetchTooltipIcon.textContent = '?';
-
-    const prefetchTooltipText = document.createElement('span');
-    prefetchTooltipText.className = 'tooltip-text';
-    prefetchTooltipText.textContent = 'Send request immediately when menu appears (result loads faster)';
-
-    prefetchTooltipIcon.appendChild(prefetchTooltipText);
-    prefetchContainer.appendChild(prefetchLabel);
-    prefetchContainer.appendChild(prefetchTooltipIcon);
 
     const prefetchInput = document.createElement('input');
     prefetchInput.type = 'checkbox';
@@ -556,7 +526,7 @@ function displayEditForm(container, prompt, index) {
     prefetchInput.checked = prompt.prefetch || false;
     prefetchInput.className = 'align-right';
 
-    prefetchRow.appendChild(prefetchContainer);
+    prefetchRow.appendChild(prefetchLabel);
     prefetchRow.appendChild(prefetchInput);
     editArticle.appendChild(prefetchRow);
 
@@ -677,28 +647,13 @@ function displayAddForm(container) {
     textRow.appendChild(textInput);
     addArticle.appendChild(textRow);
 
-    // Full page option with tooltip on separate row
+    // Full page option
     const fullPageRow = document.createElement('div');
     fullPageRow.className = 'form-row';
 
-    const fullPageContainer = document.createElement('div');
-    fullPageContainer.className = 'tooltip-container';
-
     const fullPageLabel = document.createElement('label');
-    fullPageLabel.textContent = 'Use full page';
+    fullPageLabel.textContent = 'Use full page text if no selection';
     fullPageLabel.htmlFor = 'add-fullpage';
-
-    const fullPageTooltipIcon = document.createElement('span');
-    fullPageTooltipIcon.className = 'tooltip-icon';
-    fullPageTooltipIcon.textContent = '?';
-
-    const fullPageTooltipText = document.createElement('span');
-    fullPageTooltipText.className = 'tooltip-text';
-    fullPageTooltipText.textContent = 'Use entire page text when nothing is selected';
-
-    fullPageTooltipIcon.appendChild(fullPageTooltipText);
-    fullPageContainer.appendChild(fullPageLabel);
-    fullPageContainer.appendChild(fullPageTooltipIcon);
 
     const fullPageInput = document.createElement('input');
     fullPageInput.type = 'checkbox';
@@ -706,32 +661,17 @@ function displayAddForm(container) {
     fullPageInput.checked = false;
     fullPageInput.className = 'align-right';
 
-    fullPageRow.appendChild(fullPageContainer);
+    fullPageRow.appendChild(fullPageLabel);
     fullPageRow.appendChild(fullPageInput);
     addArticle.appendChild(fullPageRow);
 
-    // Prefetch option with tooltip on separate row
+    // Prefetch option
     const prefetchRow = document.createElement('div');
     prefetchRow.className = 'form-row';
 
-    const prefetchContainer = document.createElement('div');
-    prefetchContainer.className = 'tooltip-container';
-
     const prefetchLabel = document.createElement('label');
-    prefetchLabel.textContent = 'Prefetch result';
+    prefetchLabel.textContent = 'Prefetch prompt result';
     prefetchLabel.htmlFor = 'add-prefetch';
-
-    const prefetchTooltipIcon = document.createElement('span');
-    prefetchTooltipIcon.className = 'tooltip-icon';
-    prefetchTooltipIcon.textContent = '?';
-
-    const prefetchTooltipText = document.createElement('span');
-    prefetchTooltipText.className = 'tooltip-text';
-    prefetchTooltipText.textContent = 'Send request immediately when menu appears (result loads faster)';
-
-    prefetchTooltipIcon.appendChild(prefetchTooltipText);
-    prefetchContainer.appendChild(prefetchLabel);
-    prefetchContainer.appendChild(prefetchTooltipIcon);
 
     const prefetchInput = document.createElement('input');
     prefetchInput.type = 'checkbox';
@@ -739,7 +679,7 @@ function displayAddForm(container) {
     prefetchInput.checked = false;
     prefetchInput.className = 'align-right';
 
-    prefetchRow.appendChild(prefetchContainer);
+    prefetchRow.appendChild(prefetchLabel);
     prefetchRow.appendChild(prefetchInput);
     addArticle.appendChild(prefetchRow);
 

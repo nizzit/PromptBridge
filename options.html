@@ -35,12 +35,7 @@
     </div>
 
     <h2>UI Settings</h2>
-    <div class="tooltip-container">
-        <label>Menu position</label>
-        <span class="tooltip-icon">?
-            <span class="tooltip-text">Menu position relative to cursor when text is selected</span>
-        </span>
-    </div>
+    <label>Menu position relative to cursor</label>
     <div class="menu-position-section">
         <div class="menu-position-grid">
             <label class="position-label">
@@ -88,12 +83,7 @@
     </div>
 
     <div class="form-row">
-        <div class="tooltip-container">
-            <label for="enable-markdown">Enable markdown parsing</label>
-            <span class="tooltip-icon">?
-                <span class="tooltip-text">Parse and render markdown formatting in results</span>
-            </span>
-        </div>
+        <label for="enable-markdown">Parse markdown in results</label>
         <input type="checkbox" id="enable-markdown" class="align-right" checked>
     </div>
 
@@ -108,21 +98,15 @@
     </div>
 
     <div class="form-section">
-        <div class="tooltip-container">
-            <label>Prefetch timing</label>
-            <span class="tooltip-icon">?
-                <span class="tooltip-text">When to start loading prompts: on button appearance (faster, more API calls)
-                    or on menu open (slower, fewer API calls)</span>
-            </span>
-        </div>
+        <label>Prefetch prompts</label>
         <div class="radio-group">
             <label class="radio-option">
                 <input type="radio" name="prefetch-timing" value="on-button" checked>
-                On button
+                On floating button
             </label>
             <label class="radio-option">
                 <input type="radio" name="prefetch-timing" value="on-menu">
-                On menu
+                On prompts menu
             </label>
         </div>
     </div>
