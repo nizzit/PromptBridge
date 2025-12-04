@@ -26,6 +26,13 @@ document.addEventListener('DOMContentLoaded', function () {
     loadPrompts();
     loadVersion();
 
+    // Add event listeners for auto-fetching models when URL or token changes
+    const apiUrlInput = document.getElementById('api-url');
+    const apiTokenInput = document.getElementById('api-token');
+
+    apiUrlInput.addEventListener('input', handleApiCredentialsChange);
+    apiTokenInput.addEventListener('input', handleApiCredentialsChange);
+
     // Save settings handler
     saveButton.addEventListener('click', saveSettings);
 
@@ -104,7 +111,66 @@ function loadSettings() {
         // Load markdown parsing setting (default to true)
         const enableMarkdown = result.enableMarkdown !== undefined ? result.enableMarkdown : true;
         document.getElementById('enable-markdown').checked = enableMarkdown;
+
+        // Auto-fetch models if URL and token are available
+        if (result.apiUrl && result.apiToken) {
+            // Small delay to ensure UI is ready
+            setTimeout(() => {
+                fetchModels();
+            }, 100);
+        }
     });
+}
+
+// Handle API credentials change
+function handleApiCredentialsChange() {
+    const apiUrl = document.getElementById('api-url').value;
+    const apiToken = document.getElementById('api-token').value;
+
+    // Clear any previous error highlights
+    clearApiFieldErrors();
+
+    // Auto-fetch models if both URL and token are provided
+    if (apiUrl && apiToken) {
+        // Validate URL format before fetching
+        try {
+            new URL(apiUrl);
+            fetchModels();
+        } catch (e) {
+            // Invalid URL format, don't fetch
+            return;
+        }
+    }
+}
+
+// Clear API field error highlights
+function clearApiFieldErrors() {
+    document.getElementById('api-url').classList.remove('border-error');
+    document.getElementById('api-token').classList.remove('border-error');
+}
+
+// Highlight API field with error
+function highlightApiFieldError(fieldType, message) {
+    clearApiFieldErrors();
+
+    const fieldMap = {
+        'url': 'api-url',
+        'token': 'api-token',
+        'both': ['api-url', 'api-token']
+    };
+
+    const fieldsToHighlight = fieldMap[fieldType] || fieldMap['both'];
+
+    if (Array.isArray(fieldsToHighlight)) {
+        fieldsToHighlight.forEach(fieldId => {
+            document.getElementById(fieldId).classList.add('border-error');
+        });
+    } else {
+        document.getElementById(fieldsToHighlight).classList.add('border-error');
+    }
+
+    // Show error message
+    showStatus(message, 'red', 'settings');
 }
 
 // Save settings function
@@ -175,6 +241,8 @@ function saveSettings() {
         if (lastError) {
             showStatus('Save error: ' + lastError.message, 'red', 'settings');
         } else {
+            // Clear any field errors on successful save
+            clearApiFieldErrors();
             showStatus('Settings saved successfully!', 'green', 'settings');
         }
     });
@@ -186,7 +254,7 @@ async function fetchModels() {
     const apiToken = document.getElementById('api-token').value;
 
     if (!apiUrl || !apiToken) {
-        showStatus('Please provide URL and token for testing', 'red', 'settings');
+        highlightApiFieldError('both', 'Please provide URL and token for testing');
         return;
     }
 
@@ -194,7 +262,7 @@ async function fetchModels() {
     try {
         new URL(apiUrl);
     } catch (e) {
-        showStatus('Invalid URL format', 'red', 'settings');
+        highlightApiFieldError('url', 'Invalid URL format');
         return;
     }
 
@@ -203,8 +271,8 @@ async function fetchModels() {
     try {
         // Use OpenRouter-compatible endpoint /models
         const testUrl = apiUrl.endsWith('/')
-            ? `${apiUrl}models`
-            : `${apiUrl}/models`;
+            ? `${apiUrl}models/user`
+            : `${apiUrl}/models/user`;
 
         const response = await fetch(testUrl, {
             method: 'GET',
@@ -215,7 +283,10 @@ async function fetchModels() {
         });
 
         if (!response.ok) {
-            showStatus(`Error: ${response.status} ${response.statusText}`, 'red', 'settings');
+            // If 401, highlight token field (authentication error)
+            // Otherwise, highlight URL field (connection/server error)
+            const fieldToHighlight = response.status === 401 ? 'token' : 'url';
+            highlightApiFieldError(fieldToHighlight, `Error: ${response.status} ${response.statusText}`);
             return;
         }
 
@@ -223,11 +294,14 @@ async function fetchModels() {
         const data = await response.json();
 
         if (!data.data || !Array.isArray(data.data)) {
-            showStatus('Response does not match OpenRouter API format', 'red', 'settings');
+            highlightApiFieldError('both', 'Response does not match OpenRouter API format');
             return;
         }
 
         showStatus(`Found ${data.data.length} models`, 'green', 'settings');
+
+        // Clear any previous field errors on success
+        clearApiFieldErrors();
 
         // Get currently saved model name to preserve selection
         const modelSelect = document.getElementById('model-name');
@@ -256,11 +330,11 @@ async function fetchModels() {
 
     } catch (error) {
         if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-            showStatus('Network error: check URL and CORS settings', 'red', 'settings');
+            highlightApiFieldError('both', 'Network error: check URL and CORS settings');
         } else if (error instanceof SyntaxError) {
-            showStatus('Invalid response format from server', 'red', 'settings');
+            highlightApiFieldError('both', 'Invalid response format from server');
         } else {
-            showStatus('Connection error: ' + error.message, 'red', 'settings');
+            highlightApiFieldError('both', 'Connection error: ' + error.message);
         }
     }
 }
