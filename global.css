@@ -607,19 +607,7 @@ select.align-right {
 
 .edit-form label {
     margin-bottom: 4px;
-    font-weight: 600;
-}
-
-.edit-form input[type="text"],
-.edit-form textarea {
-    margin-bottom: 12px;
-    border: 1px solid var(--primary-color);
-    background-color: white;
-}
-
-.edit-form input[type="text"]:focus,
-.edit-form textarea:focus {
-    border-color: var(--primary-color);
+    font-weight: 400;
 }
 
 .edit-form .form-row {

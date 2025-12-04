@@ -517,10 +517,13 @@ function displayEditForm(container, prompt, index) {
     editArticle.appendChild(titleHeader);
 
     // Name field
+    const nameRow = document.createElement('div');
+    nameRow.className = 'form-row';
+
     const nameLabel = document.createElement('label');
-    nameLabel.textContent = 'Prompt Name:';
+    nameLabel.textContent = 'Title';
     nameLabel.htmlFor = `edit-name-${index}`;
-    editArticle.appendChild(nameLabel);
+    nameRow.appendChild(nameLabel);
 
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
@@ -529,13 +532,17 @@ function displayEditForm(container, prompt, index) {
     nameInput.addEventListener('focus', function () {
         this.classList.remove('border-error');
     });
-    editArticle.appendChild(nameInput);
+    nameRow.appendChild(nameInput);
+    editArticle.appendChild(nameRow);
 
     // Text field
+    const textRow = document.createElement('div');
+    textRow.className = 'form-row';
+
     const textLabel = document.createElement('label');
-    textLabel.textContent = 'Prompt Text:';
+    textLabel.textContent = 'Prompt';
     textLabel.htmlFor = `edit-text-${index}`;
-    editArticle.appendChild(textLabel);
+    textRow.appendChild(textLabel);
 
     const textInput = document.createElement('textarea');
     textInput.id = `edit-text-${index}`;
@@ -544,7 +551,8 @@ function displayEditForm(container, prompt, index) {
     textInput.addEventListener('focus', function () {
         this.classList.remove('border-error');
     });
-    editArticle.appendChild(textInput);
+    textRow.appendChild(textInput);
+    editArticle.appendChild(textRow);
 
     // Full page option with tooltip on separate row
     const fullPageRow = document.createElement('div');
@@ -554,7 +562,7 @@ function displayEditForm(container, prompt, index) {
     fullPageContainer.className = 'tooltip-container';
 
     const fullPageLabel = document.createElement('label');
-    fullPageLabel.textContent = 'Use Full Page';
+    fullPageLabel.textContent = 'Use full page';
     fullPageLabel.htmlFor = `edit-fullpage-${index}`;
 
     const fullPageTooltipIcon = document.createElement('span');
@@ -587,7 +595,7 @@ function displayEditForm(container, prompt, index) {
     prefetchContainer.className = 'tooltip-container';
 
     const prefetchLabel = document.createElement('label');
-    prefetchLabel.textContent = 'Prefetch Result';
+    prefetchLabel.textContent = 'Prefetch result';
     prefetchLabel.htmlFor = `edit-prefetch-${index}`;
 
     const prefetchTooltipIcon = document.createElement('span');
@@ -692,10 +700,13 @@ function displayAddForm(container) {
     addArticle.appendChild(titleHeader);
 
     // Name field
+    const nameRow = document.createElement('div');
+    nameRow.className = 'form-row';
+
     const nameLabel = document.createElement('label');
-    nameLabel.textContent = 'Prompt Name:';
+    nameLabel.textContent = 'Prompt name';
     nameLabel.htmlFor = 'add-name';
-    addArticle.appendChild(nameLabel);
+    nameRow.appendChild(nameLabel);
 
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
@@ -704,13 +715,17 @@ function displayAddForm(container) {
     nameInput.addEventListener('focus', function () {
         this.classList.remove('border-error');
     });
-    addArticle.appendChild(nameInput);
+    nameRow.appendChild(nameInput);
+    addArticle.appendChild(nameRow);
 
     // Text field
+    const textRow = document.createElement('div');
+    textRow.className = 'form-row';
+
     const textLabel = document.createElement('label');
-    textLabel.textContent = 'Prompt Text:';
+    textLabel.textContent = 'Prompt text';
     textLabel.htmlFor = 'add-text';
-    addArticle.appendChild(textLabel);
+    textRow.appendChild(textLabel);
 
     const textInput = document.createElement('textarea');
     textInput.id = 'add-text';
@@ -719,7 +734,8 @@ function displayAddForm(container) {
     textInput.addEventListener('focus', function () {
         this.classList.remove('border-error');
     });
-    addArticle.appendChild(textInput);
+    textRow.appendChild(textInput);
+    addArticle.appendChild(textRow);
 
     // Full page option with tooltip on separate row
     const fullPageRow = document.createElement('div');
@@ -729,7 +745,7 @@ function displayAddForm(container) {
     fullPageContainer.className = 'tooltip-container';
 
     const fullPageLabel = document.createElement('label');
-    fullPageLabel.textContent = 'Use Full Page';
+    fullPageLabel.textContent = 'Use full page';
     fullPageLabel.htmlFor = 'add-fullpage';
 
     const fullPageTooltipIcon = document.createElement('span');
@@ -762,7 +778,7 @@ function displayAddForm(container) {
     prefetchContainer.className = 'tooltip-container';
 
     const prefetchLabel = document.createElement('label');
-    prefetchLabel.textContent = 'Prefetch Result';
+    prefetchLabel.textContent = 'Prefetch result';
     prefetchLabel.htmlFor = 'add-prefetch';
 
     const prefetchTooltipIcon = document.createElement('span');
