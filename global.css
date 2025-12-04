@@ -654,3 +654,9 @@ select.align-right {
 .status-info {
     color: var(--status-info);
 }
+
+/* Error state for input fields */
+.border-error {
+    border-color: var(--border-error) !important;
+    box-shadow: 0 0 0 1px var(--border-error);
+}

@@ -418,6 +418,9 @@ function displayEditForm(container, prompt, index) {
     nameInput.type = 'text';
     nameInput.id = `edit-name-${index}`;
     nameInput.value = prompt.name;
+    nameInput.addEventListener('focus', function () {
+        this.classList.remove('border-error');
+    });
     editArticle.appendChild(nameInput);
 
     // Text field
@@ -430,6 +433,9 @@ function displayEditForm(container, prompt, index) {
     textInput.id = `edit-text-${index}`;
     textInput.rows = 5;
     textInput.value = prompt.text;
+    textInput.addEventListener('focus', function () {
+        this.classList.remove('border-error');
+    });
     editArticle.appendChild(textInput);
 
     // Full page option with tooltip on separate row
@@ -545,6 +551,9 @@ function displayAddForm(container) {
     nameInput.type = 'text';
     nameInput.id = 'add-name';
     nameInput.placeholder = 'Enter prompt name';
+    nameInput.addEventListener('focus', function () {
+        this.classList.remove('border-error');
+    });
     addArticle.appendChild(nameInput);
 
     // Text field
@@ -557,6 +566,9 @@ function displayAddForm(container) {
     textInput.id = 'add-text';
     textInput.rows = 5;
     textInput.placeholder = 'Enter prompt text';
+    textInput.addEventListener('focus', function () {
+        this.classList.remove('border-error');
+    });
     addArticle.appendChild(textInput);
 
     // Full page option with tooltip on separate row
@@ -663,7 +675,6 @@ function addPrompt() {
 
     // Reload prompts to show the add form
     loadPrompts();
-    showStatus('Adding new prompt...', 'blue', 'prompts');
 }
 
 // Handle delete button click with confirmation
@@ -697,9 +708,8 @@ function deletePrompt(index) {
             const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
 
             if (lastError) {
-                showStatus('Error deleting prompt: ' + lastError.message, 'red', 'prompts');
+                console.error('Error deleting prompt:', lastError.message);
             } else {
-                showStatus('Prompt deleted successfully!', 'green', 'prompts');
                 loadPrompts();
             }
         });
@@ -710,21 +720,33 @@ function deletePrompt(index) {
 function editPrompt(index) {
     editingIndex = index;
     loadPrompts(); // Reload prompts to show the edit form
-    showStatus('Editing prompt...', 'blue', 'prompts');
 }
 
 // Cancel edit function
 function cancelEdit() {
     editingIndex = null;
     loadPrompts();
-    showStatus('Edit cancelled', 'blue', 'prompts');
 }
 
 // Cancel add form function
 function cancelAddForm() {
     addingNewPrompt = false;
     loadPrompts();
-    showStatus('Add cancelled', 'blue', 'prompts');
+}
+
+// Helper function to clear and show field errors
+function showFieldErrors(nameInput, textInput) {
+    // Clear previous error classes
+    nameInput.classList.remove('border-error');
+    textInput.classList.remove('border-error');
+
+    // Add error classes to empty fields
+    if (!nameInput.value.trim()) {
+        nameInput.classList.add('border-error');
+    }
+    if (!textInput.value.trim()) {
+        textInput.classList.add('border-error');
+    }
 }
 
 // Save new prompt function
@@ -740,7 +762,8 @@ function saveNewPrompt() {
     const prefetch = prefetchInput.checked;
 
     if (!promptName || !promptText) {
-        showStatus('Please provide both prompt name and text', 'red', 'prompts');
+        showFieldErrors(nameInput, textInput);
+        console.error('Please provide both prompt name and text');
         return;
     }
 
@@ -760,9 +783,8 @@ function saveNewPrompt() {
             const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
 
             if (lastError) {
-                showStatus('Error saving prompt: ' + lastError.message, 'red', 'prompts');
+                console.error('Error saving prompt:', lastError.message);
             } else {
-                showStatus('Prompt added successfully!', 'green', 'prompts');
                 addingNewPrompt = false;
                 loadPrompts();
             }
@@ -774,7 +796,6 @@ function saveNewPrompt() {
 function cancelInlineEdit() {
     editingIndex = null;
     loadPrompts();
-    showStatus('Edit cancelled', 'blue', 'prompts');
 }
 
 // Save edited prompt function
@@ -790,7 +811,8 @@ function saveEditedPrompt(index) {
     const prefetch = prefetchInput.checked;
 
     if (!promptName || !promptText) {
-        showStatus('Please provide both prompt name and text', 'red', 'prompts');
+        showFieldErrors(nameInput, textInput);
+        console.error('Please provide both prompt name and text');
         return;
     }
 
@@ -810,9 +832,8 @@ function saveEditedPrompt(index) {
             const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
 
             if (lastError) {
-                showStatus('Error saving prompt: ' + lastError.message, 'red', 'prompts');
+                console.error('Error saving prompt:', lastError.message);
             } else {
-                showStatus('Prompt updated successfully!', 'green', 'prompts');
                 editingIndex = null;
                 loadPrompts();
             }
