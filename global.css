@@ -443,13 +443,6 @@ hr {
     gap: 12px;
 }
 
-/* Status message */
-.status-message {
-    font-size: 14px;
-    font-weight: 500;
-    min-height: 20px;
-}
-
 /* Popup header styles */
 .header {
     display: flex;
@@ -643,19 +636,6 @@ select.align-right {
     background-color: var(--status-error) !important;
     border-color: var(--border-error) !important;
     color: var(--text-white) !important;
-}
-
-/* Status message colors */
-.status-error {
-    color: var(--status-error);
-}
-
-.status-success {
-    color: var(--status-success);
-}
-
-.status-info {
-    color: var(--status-info);
 }
 
 /* Error state for input fields */

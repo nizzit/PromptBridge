@@ -14,8 +14,6 @@ function getStorage() {
 document.addEventListener('DOMContentLoaded', function () {
     const saveButton = document.getElementById('save-settings');
     const getModelsButton = document.getElementById('get-models');
-    const settingsStatusMessage = document.getElementById('settings-status-message');
-    const promptsStatusMessage = document.getElementById('prompts-status-message');
     const addPromptButton = document.getElementById('add-prompt');
     const exportButton = document.getElementById('export-settings');
     const importButton = document.getElementById('import-settings');
@@ -181,9 +179,6 @@ function highlightApiFieldError(fieldType, message) {
     } else {
         document.getElementById(fieldsToHighlight).classList.add('border-error');
     }
-
-    // Show error message
-    showStatus(message, 'red', 'settings');
 }
 
 // Save settings function
@@ -211,7 +206,6 @@ function saveSettings() {
             document.getElementById('api-token').classList.add('border-error');
         }
 
-        showStatus('All fields are required!', 'red', 'settings');
         return;
     }
 
@@ -221,11 +215,9 @@ function saveSettings() {
     const widthMax = parseInt(resultWidthInput.max);
 
     if (isNaN(resultWidth) || resultWidth <= 0) {
-        showStatus('Width must be a positive number!', 'red', 'settings');
         return;
     }
     if (resultWidth < widthMin || resultWidth > widthMax) {
-        showStatus(`Width must be between ${widthMin} and ${widthMax} pixels!`, 'red', 'settings');
         return;
     }
 
@@ -235,11 +227,9 @@ function saveSettings() {
     const heightMax = parseInt(resultHeightInput.max);
 
     if (isNaN(resultHeight) || resultHeight <= 0) {
-        showStatus('Height must be a positive number!', 'red', 'settings');
         return;
     }
     if (resultHeight < heightMin || resultHeight > heightMax) {
-        showStatus(`Height must be between ${heightMin} and ${heightMax} pixels!`, 'red', 'settings');
         return;
     }
 
@@ -260,11 +250,10 @@ function saveSettings() {
         const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
 
         if (lastError) {
-            showStatus('Save error: ' + lastError.message, 'red', 'settings');
+            console.error('Save error:', lastError.message);
         } else {
             // Clear any field errors on successful save
             clearApiFieldErrors();
-            showStatus('Settings saved successfully!', 'green', 'settings');
         }
     });
 }
@@ -286,8 +275,6 @@ async function fetchModels() {
         highlightApiFieldError('url', 'Invalid URL format');
         return;
     }
-
-    showStatus('Testing connection...', 'blue', 'settings');
 
     try {
         // Use OpenRouter-compatible endpoint /models
@@ -318,8 +305,6 @@ async function fetchModels() {
             highlightApiFieldError('both', 'Response does not match OpenRouter API format');
             return;
         }
-
-        showStatus(`Found ${data.data.length} models`, 'green', 'settings');
 
         // Clear any previous field errors on success
         clearApiFieldErrors();
@@ -357,49 +342,6 @@ async function fetchModels() {
         } else {
             highlightApiFieldError('both', 'Connection error: ' + error.message);
         }
-    }
-}
-
-// Helper function to show status
-function showStatus(message, color, target = 'settings') {
-    let statusElementId;
-    if (target === 'prompts') {
-        statusElementId = 'prompts-status-message';
-    } else if (target === 'import-export') {
-        statusElementId = 'import-export-status';
-    } else {
-        statusElementId = 'settings-status-message';
-    }
-
-    const statusMessage = document.getElementById(statusElementId);
-
-    if (!statusMessage) return;
-
-    // Map color names to CSS classes
-    const colorClassMap = {
-        'red': 'status-error',
-        'green': 'status-success',
-        'blue': 'status-info'
-    };
-
-    statusMessage.textContent = message;
-
-    // Remove existing status classes
-    statusMessage.classList.remove('status-error', 'status-success', 'status-info');
-
-    // Add the appropriate class if it exists in the map
-    if (colorClassMap[color]) {
-        statusMessage.classList.add(colorClassMap[color]);
-    } else {
-        // If no class mapping exists, set the color directly
-        statusMessage.style.color = color;
-    }
-
-    // Auto-hide message after 3 seconds for successful operations
-    if (color === 'green') {
-        setTimeout(() => {
-            statusMessage.textContent = '';
-        }, 3000);
     }
 }
 
@@ -1116,8 +1058,6 @@ function exportSettings() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-
-        showStatus('Settings exported successfully!', 'green', 'import-export');
     });
 }
 
@@ -1133,14 +1073,13 @@ function importSettings(event) {
 
             // Validate the imported data
             if (!importData.settings) {
-                showStatus('Invalid settings file format', 'red', 'import-export');
+                console.error('Invalid settings file format');
                 return;
             }
 
             // Ask for confirmation
             const confirmMessage = `Import settings from ${importData.exportDate ? new Date(importData.exportDate).toLocaleString() : 'unknown date'}?\n\nThis will overwrite your current settings.`;
             if (!confirm(confirmMessage)) {
-                showStatus('Import cancelled', 'blue', 'import-export');
                 event.target.value = ''; // Reset file input
                 return;
             }
@@ -1151,9 +1090,8 @@ function importSettings(event) {
                 const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
 
                 if (lastError) {
-                    showStatus('Error importing settings: ' + lastError.message, 'red', 'import-export');
+                    console.error('Error importing settings:', lastError.message);
                 } else {
-                    showStatus('Settings imported successfully!', 'green', 'import-export');
                     // Reload the page to reflect imported settings
                     setTimeout(() => {
                         location.reload();
@@ -1162,7 +1100,7 @@ function importSettings(event) {
             });
 
         } catch (error) {
-            showStatus('Error parsing settings file: ' + error.message, 'red', 'import-export');
+            console.error('Error parsing settings file:', error.message);
         }
 
         // Reset file input
@@ -1170,7 +1108,7 @@ function importSettings(event) {
     };
 
     reader.onerror = function () {
-        showStatus('Error reading file', 'red', 'import-export');
+        console.error('Error reading file');
         event.target.value = '';
     };
 
