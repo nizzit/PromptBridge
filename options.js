@@ -1,5 +1,6 @@
 // Editing state
 let editingIndex = null;
+let addingNewPrompt = false;
 
 // Default result window size
 const DEFAULT_RESULT_WIDTH = 500;
@@ -16,7 +17,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const settingsStatusMessage = document.getElementById('settings-status-message');
     const promptsStatusMessage = document.getElementById('prompts-status-message');
     const addPromptButton = document.getElementById('add-prompt');
-    const cancelEditButton = document.getElementById('cancel-edit');
     const exportButton = document.getElementById('export-settings');
     const importButton = document.getElementById('import-settings');
     const importFileInput = document.getElementById('import-file');
@@ -32,11 +32,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Get models handler
     getModelsButton.addEventListener('click', fetchModels);
 
-    // Add/Update prompt handler
+    // Add prompt handler
     addPromptButton.addEventListener('click', addPrompt);
-
-    // Cancel edit handler
-    cancelEditButton.addEventListener('click', cancelEdit);
 
     // Export settings handler
     exportButton.addEventListener('click', exportSettings);
@@ -315,113 +312,343 @@ function displayPrompts(prompts) {
     const promptsList = document.getElementById('prompts-list');
     promptsList.innerHTML = '';
 
+    // If we're adding a new prompt, show the add form
+    if (addingNewPrompt) {
+        displayAddForm(promptsList);
+        return;
+    }
+
     if (prompts.length === 0) {
         promptsList.innerHTML = '<p>No prompts saved yet.</p>';
         return;
     }
 
     prompts.forEach((prompt, index) => {
-        const promptArticle = document.createElement('article');
-
-        const headerDiv = document.createElement('div');
-        headerDiv.className = 'prompt-header';
-
-        const nameLabel = document.createElement('strong');
-        nameLabel.textContent = prompt.name;
-        headerDiv.appendChild(nameLabel);
-
-        if (prompt.useFullPage) {
-            const fullPageBadge = document.createElement('span');
-            fullPageBadge.className = 'full-page-badge';
-            fullPageBadge.textContent = 'Full Page';
-            headerDiv.appendChild(fullPageBadge);
+        // Check if this prompt is currently being edited
+        if (editingIndex === index) {
+            displayEditForm(promptsList, prompt, index);
+        } else {
+            displayPromptCard(promptsList, prompt, index);
         }
-
-        if (prompt.prefetch) {
-            const prefetchBadge = document.createElement('span');
-            prefetchBadge.className = 'full-page-badge';
-            prefetchBadge.textContent = 'Prefetch';
-            headerDiv.appendChild(prefetchBadge);
-        }
-
-        promptArticle.appendChild(headerDiv);
-
-        const textPara = document.createElement('p');
-        textPara.className = 'prompt-text';
-        textPara.textContent = prompt.text;
-        promptArticle.appendChild(textPara);
-
-        const editButton = document.createElement('button');
-        editButton.textContent = 'Edit';
-        editButton.addEventListener('click', function () {
-            editPrompt(index);
-        });
-        promptArticle.appendChild(editButton);
-
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', function () {
-            deletePrompt(index);
-        });
-        promptArticle.appendChild(deleteButton);
-
-        promptsList.appendChild(promptArticle);
     });
+}
+
+// Display a single prompt card
+function displayPromptCard(container, prompt, index) {
+    const promptArticle = document.createElement('article');
+    promptArticle.id = `prompt-${index}`;
+
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'prompt-header';
+
+    const nameLabel = document.createElement('strong');
+    nameLabel.textContent = prompt.name;
+    headerDiv.appendChild(nameLabel);
+
+    if (prompt.useFullPage) {
+        const fullPageBadge = document.createElement('span');
+        fullPageBadge.className = 'full-page-badge';
+        fullPageBadge.textContent = 'Full Page';
+        headerDiv.appendChild(fullPageBadge);
+    }
+
+    if (prompt.prefetch) {
+        const prefetchBadge = document.createElement('span');
+        prefetchBadge.className = 'full-page-badge';
+        prefetchBadge.textContent = 'Prefetch';
+        headerDiv.appendChild(prefetchBadge);
+    }
+
+    promptArticle.appendChild(headerDiv);
+
+    const textPara = document.createElement('p');
+    textPara.className = 'prompt-text';
+    textPara.textContent = prompt.text;
+    promptArticle.appendChild(textPara);
+
+    const editButton = document.createElement('button');
+    editButton.textContent = 'Edit';
+    editButton.addEventListener('click', function () {
+        editPrompt(index);
+    });
+    promptArticle.appendChild(editButton);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.addEventListener('click', function () {
+        deletePrompt(index);
+    });
+    promptArticle.appendChild(deleteButton);
+
+    container.appendChild(promptArticle);
+}
+
+// Display edit form for a prompt
+function displayEditForm(container, prompt, index) {
+    const editArticle = document.createElement('article');
+    editArticle.id = `prompt-edit-${index}`;
+    editArticle.className = 'edit-form';
+
+    // Form title
+    const titleHeader = document.createElement('h3');
+    titleHeader.textContent = 'Edit Prompt';
+    editArticle.appendChild(titleHeader);
+
+    // Name field
+    const nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Prompt Name:';
+    nameLabel.htmlFor = `edit-name-${index}`;
+    editArticle.appendChild(nameLabel);
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.id = `edit-name-${index}`;
+    nameInput.value = prompt.name;
+    editArticle.appendChild(nameInput);
+
+    // Text field
+    const textLabel = document.createElement('label');
+    textLabel.textContent = 'Prompt Text:';
+    textLabel.htmlFor = `edit-text-${index}`;
+    editArticle.appendChild(textLabel);
+
+    const textInput = document.createElement('textarea');
+    textInput.id = `edit-text-${index}`;
+    textInput.rows = 5;
+    textInput.value = prompt.text;
+    editArticle.appendChild(textInput);
+
+    // Full page option with tooltip on separate row
+    const fullPageRow = document.createElement('div');
+    fullPageRow.className = 'form-row';
+
+    const fullPageContainer = document.createElement('div');
+    fullPageContainer.className = 'tooltip-container';
+
+    const fullPageLabel = document.createElement('label');
+    fullPageLabel.textContent = 'Use Full Page';
+    fullPageLabel.htmlFor = `edit-fullpage-${index}`;
+
+    const fullPageTooltipIcon = document.createElement('span');
+    fullPageTooltipIcon.className = 'tooltip-icon';
+    fullPageTooltipIcon.textContent = '?';
+
+    const fullPageTooltipText = document.createElement('span');
+    fullPageTooltipText.className = 'tooltip-text';
+    fullPageTooltipText.textContent = 'Use entire page text when nothing is selected';
+
+    fullPageTooltipIcon.appendChild(fullPageTooltipText);
+    fullPageContainer.appendChild(fullPageLabel);
+    fullPageContainer.appendChild(fullPageTooltipIcon);
+
+    const fullPageInput = document.createElement('input');
+    fullPageInput.type = 'checkbox';
+    fullPageInput.id = `edit-fullpage-${index}`;
+    fullPageInput.checked = prompt.useFullPage || false;
+    fullPageInput.className = 'align-right';
+
+    fullPageRow.appendChild(fullPageContainer);
+    fullPageRow.appendChild(fullPageInput);
+    editArticle.appendChild(fullPageRow);
+
+    // Prefetch option with tooltip on separate row
+    const prefetchRow = document.createElement('div');
+    prefetchRow.className = 'form-row';
+
+    const prefetchContainer = document.createElement('div');
+    prefetchContainer.className = 'tooltip-container';
+
+    const prefetchLabel = document.createElement('label');
+    prefetchLabel.textContent = 'Prefetch Result';
+    prefetchLabel.htmlFor = `edit-prefetch-${index}`;
+
+    const prefetchTooltipIcon = document.createElement('span');
+    prefetchTooltipIcon.className = 'tooltip-icon';
+    prefetchTooltipIcon.textContent = '?';
+
+    const prefetchTooltipText = document.createElement('span');
+    prefetchTooltipText.className = 'tooltip-text';
+    prefetchTooltipText.textContent = 'Send request immediately when menu appears (result loads faster)';
+
+    prefetchTooltipIcon.appendChild(prefetchTooltipText);
+    prefetchContainer.appendChild(prefetchLabel);
+    prefetchContainer.appendChild(prefetchTooltipIcon);
+
+    const prefetchInput = document.createElement('input');
+    prefetchInput.type = 'checkbox';
+    prefetchInput.id = `edit-prefetch-${index}`;
+    prefetchInput.checked = prompt.prefetch || false;
+    prefetchInput.className = 'align-right';
+
+    prefetchRow.appendChild(prefetchContainer);
+    prefetchRow.appendChild(prefetchInput);
+    editArticle.appendChild(prefetchRow);
+
+    // Buttons container
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'button-with-status';
+
+    // Save button
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Save';
+    saveButton.addEventListener('click', function () {
+        saveEditedPrompt(index);
+    });
+    buttonsContainer.appendChild(saveButton);
+
+    // Cancel button
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.className = 'secondary';
+    cancelButton.addEventListener('click', function () {
+        cancelInlineEdit();
+    });
+    buttonsContainer.appendChild(cancelButton);
+
+    editArticle.appendChild(buttonsContainer);
+    container.appendChild(editArticle);
+}
+
+// Display add form for a new prompt
+function displayAddForm(container) {
+    const addArticle = document.createElement('article');
+    addArticle.id = 'prompt-add-form';
+    addArticle.className = 'edit-form';
+
+    // Form title
+    const titleHeader = document.createElement('h3');
+    titleHeader.textContent = 'Add New Prompt';
+    addArticle.appendChild(titleHeader);
+
+    // Name field
+    const nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Prompt Name:';
+    nameLabel.htmlFor = 'add-name';
+    addArticle.appendChild(nameLabel);
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.id = 'add-name';
+    nameInput.placeholder = 'Enter prompt name';
+    addArticle.appendChild(nameInput);
+
+    // Text field
+    const textLabel = document.createElement('label');
+    textLabel.textContent = 'Prompt Text:';
+    textLabel.htmlFor = 'add-text';
+    addArticle.appendChild(textLabel);
+
+    const textInput = document.createElement('textarea');
+    textInput.id = 'add-text';
+    textInput.rows = 5;
+    textInput.placeholder = 'Enter prompt text';
+    addArticle.appendChild(textInput);
+
+    // Full page option with tooltip on separate row
+    const fullPageRow = document.createElement('div');
+    fullPageRow.className = 'form-row';
+
+    const fullPageContainer = document.createElement('div');
+    fullPageContainer.className = 'tooltip-container';
+
+    const fullPageLabel = document.createElement('label');
+    fullPageLabel.textContent = 'Use Full Page';
+    fullPageLabel.htmlFor = 'add-fullpage';
+
+    const fullPageTooltipIcon = document.createElement('span');
+    fullPageTooltipIcon.className = 'tooltip-icon';
+    fullPageTooltipIcon.textContent = '?';
+
+    const fullPageTooltipText = document.createElement('span');
+    fullPageTooltipText.className = 'tooltip-text';
+    fullPageTooltipText.textContent = 'Use entire page text when nothing is selected';
+
+    fullPageTooltipIcon.appendChild(fullPageTooltipText);
+    fullPageContainer.appendChild(fullPageLabel);
+    fullPageContainer.appendChild(fullPageTooltipIcon);
+
+    const fullPageInput = document.createElement('input');
+    fullPageInput.type = 'checkbox';
+    fullPageInput.id = 'add-fullpage';
+    fullPageInput.checked = false;
+    fullPageInput.className = 'align-right';
+
+    fullPageRow.appendChild(fullPageContainer);
+    fullPageRow.appendChild(fullPageInput);
+    addArticle.appendChild(fullPageRow);
+
+    // Prefetch option with tooltip on separate row
+    const prefetchRow = document.createElement('div');
+    prefetchRow.className = 'form-row';
+
+    const prefetchContainer = document.createElement('div');
+    prefetchContainer.className = 'tooltip-container';
+
+    const prefetchLabel = document.createElement('label');
+    prefetchLabel.textContent = 'Prefetch Result';
+    prefetchLabel.htmlFor = 'add-prefetch';
+
+    const prefetchTooltipIcon = document.createElement('span');
+    prefetchTooltipIcon.className = 'tooltip-icon';
+    prefetchTooltipIcon.textContent = '?';
+
+    const prefetchTooltipText = document.createElement('span');
+    prefetchTooltipText.className = 'tooltip-text';
+    prefetchTooltipText.textContent = 'Send request immediately when menu appears (result loads faster)';
+
+    prefetchTooltipIcon.appendChild(prefetchTooltipText);
+    prefetchContainer.appendChild(prefetchLabel);
+    prefetchContainer.appendChild(prefetchTooltipIcon);
+
+    const prefetchInput = document.createElement('input');
+    prefetchInput.type = 'checkbox';
+    prefetchInput.id = 'add-prefetch';
+    prefetchInput.checked = false;
+    prefetchInput.className = 'align-right';
+
+    prefetchRow.appendChild(prefetchContainer);
+    prefetchRow.appendChild(prefetchInput);
+    addArticle.appendChild(prefetchRow);
+
+    // Buttons container
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'button-with-status';
+
+    // Save button
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Save';
+    saveButton.addEventListener('click', function () {
+        saveNewPrompt();
+    });
+    buttonsContainer.appendChild(saveButton);
+
+    // Cancel button
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.className = 'secondary';
+    cancelButton.addEventListener('click', function () {
+        cancelAddForm();
+    });
+    buttonsContainer.appendChild(cancelButton);
+
+    addArticle.appendChild(buttonsContainer);
+    container.appendChild(addArticle);
 }
 
 // Add or update prompt function
 function addPrompt() {
-    const promptName = document.getElementById('prompt-name').value.trim();
-    const promptText = document.getElementById('prompt-text').value.trim();
-    const useFullPage = document.getElementById('use-full-page').checked;
-    const prefetch = document.getElementById('prefetch').checked;
-
-    if (!promptName || !promptText) {
-        showStatus('Please provide both prompt name and text', 'red', 'prompts');
+    if (addingNewPrompt) {
+        // If we're already adding a new prompt, do nothing
         return;
     }
 
-    const storage = getStorage();
-    storage.sync.get(['prompts'], function (result) {
-        const prompts = result.prompts || [];
+    // Set flag to indicate we're adding a new prompt
+    addingNewPrompt = true;
+    editingIndex = null; // Reset editing index
 
-        if (editingIndex !== null) {
-            // Update existing prompt
-            prompts[editingIndex] = {
-                name: promptName,
-                text: promptText,
-                useFullPage: useFullPage,
-                prefetch: prefetch
-            };
-        } else {
-            // Add new prompt
-            prompts.push({
-                name: promptName,
-                text: promptText,
-                useFullPage: useFullPage,
-                prefetch: prefetch
-            });
-        }
-
-        storage.sync.set({ prompts: prompts }, function () {
-            const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
-
-            if (lastError) {
-                showStatus('Error saving prompt: ' + lastError.message, 'red', 'prompts');
-            } else {
-                const message = editingIndex !== null ? 'Prompt updated successfully!' : 'Prompt added successfully!';
-                showStatus(message, 'green', 'prompts');
-                document.getElementById('prompt-name').value = '';
-                document.getElementById('prompt-text').value = '';
-                document.getElementById('use-full-page').checked = false;
-                document.getElementById('prefetch').checked = false;
-                editingIndex = null;
-                document.getElementById('add-prompt').textContent = 'Add Prompt';
-                document.getElementById('cancel-edit').style.display = 'none';
-                loadPrompts();
-            }
-        });
-    });
+    // Reload prompts to show the add form
+    loadPrompts();
+    showStatus('Adding new prompt...', 'blue', 'prompts');
 }
 
 // Delete prompt function
@@ -446,34 +673,116 @@ function deletePrompt(index) {
 
 // Edit prompt function
 function editPrompt(index) {
-    const storage = getStorage();
-    storage.sync.get(['prompts'], function (result) {
-        const prompts = result.prompts || [];
-        const prompt = prompts[index];
-
-        if (prompt) {
-            document.getElementById('prompt-name').value = prompt.name;
-            document.getElementById('prompt-text').value = prompt.text;
-            document.getElementById('use-full-page').checked = prompt.useFullPage || false;
-            document.getElementById('prefetch').checked = prompt.prefetch || false;
-            editingIndex = index;
-            document.getElementById('add-prompt').textContent = 'Update Prompt';
-            document.getElementById('cancel-edit').style.display = 'inline';
-            showStatus('Editing prompt...', 'blue', 'prompts');
-        }
-    });
+    editingIndex = index;
+    loadPrompts(); // Reload prompts to show the edit form
+    showStatus('Editing prompt...', 'blue', 'prompts');
 }
 
 // Cancel edit function
 function cancelEdit() {
-    document.getElementById('prompt-name').value = '';
-    document.getElementById('prompt-text').value = '';
-    document.getElementById('use-full-page').checked = false;
-    document.getElementById('prefetch').checked = false;
     editingIndex = null;
-    document.getElementById('add-prompt').textContent = 'Add Prompt';
-    document.getElementById('cancel-edit').style.display = 'none';
+    loadPrompts();
     showStatus('Edit cancelled', 'blue', 'prompts');
+}
+
+// Cancel add form function
+function cancelAddForm() {
+    addingNewPrompt = false;
+    loadPrompts();
+    showStatus('Add cancelled', 'blue', 'prompts');
+}
+
+// Save new prompt function
+function saveNewPrompt() {
+    const nameInput = document.getElementById('add-name');
+    const textInput = document.getElementById('add-text');
+    const fullPageInput = document.getElementById('add-fullpage');
+    const prefetchInput = document.getElementById('add-prefetch');
+
+    const promptName = nameInput.value.trim();
+    const promptText = textInput.value.trim();
+    const useFullPage = fullPageInput.checked;
+    const prefetch = prefetchInput.checked;
+
+    if (!promptName || !promptText) {
+        showStatus('Please provide both prompt name and text', 'red', 'prompts');
+        return;
+    }
+
+    const storage = getStorage();
+    storage.sync.get(['prompts'], function (result) {
+        const prompts = result.prompts || [];
+
+        // Add new prompt
+        prompts.push({
+            name: promptName,
+            text: promptText,
+            useFullPage: useFullPage,
+            prefetch: prefetch
+        });
+
+        storage.sync.set({ prompts: prompts }, function () {
+            const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
+
+            if (lastError) {
+                showStatus('Error saving prompt: ' + lastError.message, 'red', 'prompts');
+            } else {
+                showStatus('Prompt added successfully!', 'green', 'prompts');
+                addingNewPrompt = false;
+                loadPrompts();
+            }
+        });
+    });
+}
+
+// Cancel inline edit function
+function cancelInlineEdit() {
+    editingIndex = null;
+    loadPrompts();
+    showStatus('Edit cancelled', 'blue', 'prompts');
+}
+
+// Save edited prompt function
+function saveEditedPrompt(index) {
+    const nameInput = document.getElementById(`edit-name-${index}`);
+    const textInput = document.getElementById(`edit-text-${index}`);
+    const fullPageInput = document.getElementById(`edit-fullpage-${index}`);
+    const prefetchInput = document.getElementById(`edit-prefetch-${index}`);
+
+    const promptName = nameInput.value.trim();
+    const promptText = textInput.value.trim();
+    const useFullPage = fullPageInput.checked;
+    const prefetch = prefetchInput.checked;
+
+    if (!promptName || !promptText) {
+        showStatus('Please provide both prompt name and text', 'red', 'prompts');
+        return;
+    }
+
+    const storage = getStorage();
+    storage.sync.get(['prompts'], function (result) {
+        const prompts = result.prompts || [];
+
+        // Update the prompt at the specified index
+        prompts[index] = {
+            name: promptName,
+            text: promptText,
+            useFullPage: useFullPage,
+            prefetch: prefetch
+        };
+
+        storage.sync.set({ prompts: prompts }, function () {
+            const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
+
+            if (lastError) {
+                showStatus('Error saving prompt: ' + lastError.message, 'red', 'prompts');
+            } else {
+                showStatus('Prompt updated successfully!', 'green', 'prompts');
+                editingIndex = null;
+                loadPrompts();
+            }
+        });
+    });
 }
 
 // Export settings function

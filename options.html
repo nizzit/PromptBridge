@@ -144,39 +144,9 @@
 
     <div id="prompts-list"></div>
 
-    <div>
-        <h2>Add New Prompt</h2>
-        <div class="form-row">
-            <label for="prompt-name">Prompt Name:</label>
-            <input type="text" id="prompt-name" placeholder="Enter prompt name">
-        </div>
-        <div class="form-row">
-            <label for="prompt-text">Prompt Text:</label>
-            <textarea id="prompt-text" rows="5" cols="50" placeholder="Enter prompt text"></textarea>
-        </div>
-        <div class="form-row">
-            <div class="tooltip-container">
-                <label for="use-full-page">Use Full Page</label>
-                <span class="tooltip-icon">?
-                    <span class="tooltip-text">Use entire page text when nothing is selected</span>
-                </span>
-            </div>
-            <input type="checkbox" id="use-full-page" class="align-right">
-        </div>
-        <div class="form-row">
-            <div class="tooltip-container">
-                <label for="prefetch">Prefetch Result</label>
-                <span class="tooltip-icon">?
-                    <span class="tooltip-text">Send request immediately when menu appears (result loads faster)</span>
-                </span>
-            </div>
-            <input type="checkbox" id="prefetch" class="align-right">
-        </div>
-        <div class="button-with-status">
-            <button id="add-prompt">Add Prompt</button>
-            <button id="cancel-edit" class="hidden">Cancel</button>
-            <span id="prompts-status-message" class="status-message"></span>
-        </div>
+    <div class="button-with-status">
+        <button id="add-prompt">Add Prompt</button>
+        <span id="prompts-status-message" class="status-message"></span>
     </div>
 
     <footer

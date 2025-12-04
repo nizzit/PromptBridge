@@ -575,3 +575,51 @@ select.align-right {
     visibility: visible;
     opacity: 1;
 }
+
+/* Styles for inline edit form */
+.edit-form {
+    background-color: #f9f9f9;
+    border: 2px solid var(--primary-color);
+}
+
+.edit-form h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+}
+
+.edit-form label {
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.edit-form input[type="text"],
+.edit-form textarea {
+    margin-bottom: 12px;
+    border: 1px solid var(--primary-color);
+    background-color: white;
+}
+
+.edit-form input[type="text"]:focus,
+.edit-form textarea:focus {
+    border-color: var(--primary-color);
+}
+
+.edit-form .form-row {
+    padding: 8px;
+    margin-bottom: 0px;
+}
+
+.edit-form .button-with-status {
+    margin-top: 16px;
+    justify-content: flex-end;
+}
+
+.edit-form button {
+    margin-left: 8px;
+}
+
+.edit-form button:first-child {
+    margin-left: 0;
+}
