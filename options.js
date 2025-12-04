@@ -280,15 +280,25 @@ function showStatus(message, color, target = 'settings') {
 
     if (!statusMessage) return;
 
-    // Map color names to CSS variables
-    const colorMap = {
-        'red': 'var(--status-error)',
-        'green': 'var(--status-success)',
-        'blue': 'var(--status-info)'
+    // Map color names to CSS classes
+    const colorClassMap = {
+        'red': 'status-error',
+        'green': 'status-success',
+        'blue': 'status-info'
     };
 
     statusMessage.textContent = message;
-    statusMessage.style.color = colorMap[color] || color;
+
+    // Remove existing status classes
+    statusMessage.classList.remove('status-error', 'status-success', 'status-info');
+
+    // Add the appropriate class if it exists in the map
+    if (colorClassMap[color]) {
+        statusMessage.classList.add(colorClassMap[color]);
+    } else {
+        // If no class mapping exists, set the color directly
+        statusMessage.style.color = color;
+    }
 
     // Auto-hide message after 3 seconds for successful operations
     if (color === 'green') {
@@ -664,8 +674,7 @@ function handleDeleteClick(button, index) {
     } else {
         // First click - show confirmation
         button.dataset.confirmState = 'true';
-        button.style.backgroundColor = '#ff4444';
-        button.style.color = 'white';
+        // Styles are now handled by CSS class in global.css
     }
 }
 
@@ -673,8 +682,7 @@ function handleDeleteClick(button, index) {
 function resetDeleteButton(button) {
     if (button.dataset.confirmState === 'true') {
         button.dataset.confirmState = 'false';
-        button.style.backgroundColor = '';
-        button.style.color = '';
+        // Styles are now handled by CSS class in global.css
     }
 }
 
