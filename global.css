@@ -21,6 +21,8 @@
     --status-success: #2ecc71;
     --status-info: #17a2b8;
     --tooltip-bg: #333;
+    --border-light: #ddd;
+    --text-footer: #666;
 }
 
 /* Styles for standard HTML elements */
@@ -610,7 +612,6 @@ select.align-right {
 .edit-form h3 {
     margin-top: 0;
     color: var(--primary-color);
-    border-bottom: 1px solid var(--border-color);
     padding-bottom: 8px;
 }
 
@@ -661,4 +662,14 @@ select.align-right {
 .border-error {
     border-color: var(--border-error) !important;
     box-shadow: 0 0 0 1px var(--border-error);
+}
+
+/* Footer styles */
+footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
+    text-align: center;
+    color: var(--text-footer);
+    font-size: 0.9em;
 }
