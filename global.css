@@ -194,6 +194,11 @@ label {
     margin-bottom: 16px;
 }
 
+/* Form section with spacing but no flex layout */
+.form-section {
+    margin-bottom: 16px;
+}
+
 .form-row label {
     min-width: 100px;
     margin-bottom: 0;

@@ -87,7 +87,27 @@
         <input type="checkbox" id="open-on-hover" class="align-right">
     </div>
 
-    <div>
+    <div class="form-row">
+        <div class="tooltip-container">
+            <label for="enable-markdown">Enable Markdown Parsing</label>
+            <span class="tooltip-icon">?
+                <span class="tooltip-text">Parse and render markdown formatting in results</span>
+            </span>
+        </div>
+        <input type="checkbox" id="enable-markdown" class="align-right" checked>
+    </div>
+
+    <div class="form-row">
+        <label for="result-width">Result Width:</label>
+        <input type="number" id="result-width" class="align-right" placeholder="500" min="200" max="1200" step="50">
+    </div>
+
+    <div class="form-row">
+        <label for="result-height">Result Height:</label>
+        <input type="number" id="result-height" class="align-right" placeholder="600" min="100" max="1000" step="50">
+    </div>
+
+    <div class="form-section">
         <div class="tooltip-container">
             <label>Prefetch Timing:</label>
             <span class="tooltip-icon">?
@@ -105,26 +125,6 @@
                 On menu
             </label>
         </div>
-    </div>
-
-    <div class="form-row">
-        <label for="result-width">Result Width:</label>
-        <input type="number" id="result-width" class="align-right" placeholder="500" min="200" max="1200" step="50">
-    </div>
-
-    <div class="form-row">
-        <label for="result-height">Result Height:</label>
-        <input type="number" id="result-height" class="align-right" placeholder="600" min="100" max="1000" step="50">
-    </div>
-
-    <div class="form-row">
-        <div class="tooltip-container">
-            <label for="enable-markdown">Enable Markdown Parsing</label>
-            <span class="tooltip-icon">?
-                <span class="tooltip-text">Parse and render markdown formatting in results</span>
-            </span>
-        </div>
-        <input type="checkbox" id="enable-markdown" class="align-right" checked>
     </div>
 
     <div class="button-with-status">
