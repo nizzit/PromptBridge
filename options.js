@@ -464,6 +464,19 @@ function displayPromptCard(container, prompt, index) {
         headerDiv.appendChild(prefetchBadge);
     }
 
+    if (prompt.modelName) {
+        const modelBadge = document.createElement('span');
+        modelBadge.className = 'full-page-badge';
+
+        // Extract model name after the slash, or use full name if no slash
+        const modelDisplayName = prompt.modelName.includes('/')
+            ? prompt.modelName.split('/').pop()
+            : prompt.modelName;
+
+        modelBadge.textContent = modelDisplayName;
+        headerDiv.appendChild(modelBadge);
+    }
+
     promptArticle.appendChild(headerDiv);
 
     const textPara = document.createElement('p');
@@ -599,6 +612,48 @@ function displayEditForm(container, prompt, index) {
     prefetchRow.appendChild(prefetchInput);
     editArticle.appendChild(prefetchRow);
 
+    // Model selection row
+    const modelRow = document.createElement('div');
+    modelRow.className = 'form-row';
+
+    const modelLabel = document.createElement('label');
+    modelLabel.textContent = 'Model';
+    modelLabel.htmlFor = `edit-model-${index}`;
+    modelRow.appendChild(modelLabel);
+
+    const modelSelectContainer = document.createElement('div');
+    modelSelectContainer.className = 'model-select-container';
+
+    const modelSelect = document.createElement('select');
+    modelSelect.id = `edit-model-${index}`;
+    modelSelect.className = 'model-select';
+
+    // Add empty option as default
+    const emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = 'default';
+    emptyOption.selected = !prompt.modelName;
+    modelSelect.appendChild(emptyOption);
+
+    // Get available models from global dropdown
+    const globalModelSelect = document.getElementById('model-name');
+    if (globalModelSelect && globalModelSelect.options.length > 1) {
+        // Copy options from global model dropdown
+        for (let i = 1; i < globalModelSelect.options.length; i++) {
+            const option = document.createElement('option');
+            option.value = globalModelSelect.options[i].value;
+            option.textContent = globalModelSelect.options[i].textContent;
+            if (prompt.modelName === option.value) {
+                option.selected = true;
+            }
+            modelSelect.appendChild(option);
+        }
+    }
+
+    modelSelectContainer.appendChild(modelSelect);
+    modelRow.appendChild(modelSelectContainer);
+    editArticle.appendChild(modelRow);
+
     // Buttons container
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'button-with-status';
@@ -732,6 +787,45 @@ function displayAddForm(container) {
     prefetchRow.appendChild(prefetchInput);
     addArticle.appendChild(prefetchRow);
 
+    // Model selection row
+    const modelRow = document.createElement('div');
+    modelRow.className = 'form-row';
+
+    const modelLabel = document.createElement('label');
+    modelLabel.textContent = 'Model';
+    modelLabel.htmlFor = 'add-model';
+    modelRow.appendChild(modelLabel);
+
+    const modelSelectContainer = document.createElement('div');
+    modelSelectContainer.className = 'model-select-container';
+
+    const modelSelect = document.createElement('select');
+    modelSelect.id = 'add-model';
+    modelSelect.className = 'model-select';
+
+    // Add empty option as default
+    const emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = 'default';
+    emptyOption.selected = true;
+    modelSelect.appendChild(emptyOption);
+
+    // Get available models from global dropdown
+    const globalModelSelect = document.getElementById('model-name');
+    if (globalModelSelect && globalModelSelect.options.length > 1) {
+        // Copy options from global model dropdown
+        for (let i = 1; i < globalModelSelect.options.length; i++) {
+            const option = document.createElement('option');
+            option.value = globalModelSelect.options[i].value;
+            option.textContent = globalModelSelect.options[i].textContent;
+            modelSelect.appendChild(option);
+        }
+    }
+
+    modelSelectContainer.appendChild(modelSelect);
+    modelRow.appendChild(modelSelectContainer);
+    addArticle.appendChild(modelRow);
+
     // Buttons container
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'button-with-status';
@@ -850,11 +944,13 @@ function saveNewPrompt() {
     const textInput = document.getElementById('add-text');
     const fullPageInput = document.getElementById('add-fullpage');
     const prefetchInput = document.getElementById('add-prefetch');
+    const modelSelect = document.getElementById('add-model');
 
     const promptName = nameInput.value.trim();
     const promptText = textInput.value.trim();
     const useFullPage = fullPageInput.checked;
     const prefetch = prefetchInput.checked;
+    const modelName = modelSelect.value; // Can be empty string for global model
 
     if (!promptName || !promptText) {
         showFieldErrors(nameInput, textInput);
@@ -867,12 +963,19 @@ function saveNewPrompt() {
         const prompts = result.prompts || [];
 
         // Add new prompt
-        prompts.push({
+        const newPrompt = {
             name: promptName,
             text: promptText,
             useFullPage: useFullPage,
             prefetch: prefetch
-        });
+        };
+
+        // Only add modelName if it's not empty
+        if (modelName) {
+            newPrompt.modelName = modelName;
+        }
+
+        prompts.push(newPrompt);
 
         storage.sync.set({ prompts: prompts }, function () {
             const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
@@ -899,11 +1002,13 @@ function saveEditedPrompt(index) {
     const textInput = document.getElementById(`edit-text-${index}`);
     const fullPageInput = document.getElementById(`edit-fullpage-${index}`);
     const prefetchInput = document.getElementById(`edit-prefetch-${index}`);
+    const modelSelect = document.getElementById(`edit-model-${index}`);
 
     const promptName = nameInput.value.trim();
     const promptText = textInput.value.trim();
     const useFullPage = fullPageInput.checked;
     const prefetch = prefetchInput.checked;
+    const modelName = modelSelect.value; // Can be empty string for global model
 
     if (!promptName || !promptText) {
         showFieldErrors(nameInput, textInput);
@@ -916,12 +1021,19 @@ function saveEditedPrompt(index) {
         const prompts = result.prompts || [];
 
         // Update the prompt at the specified index
-        prompts[index] = {
+        const updatedPrompt = {
             name: promptName,
             text: promptText,
             useFullPage: useFullPage,
             prefetch: prefetch
         };
+
+        // Only add modelName if it's not empty
+        if (modelName) {
+            updatedPrompt.modelName = modelName;
+        }
+
+        prompts[index] = updatedPrompt;
 
         storage.sync.set({ prompts: prompts }, function () {
             const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;

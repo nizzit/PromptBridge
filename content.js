@@ -114,7 +114,11 @@ async function handlePromptSelection(prompt, selectedText, storage, button, orig
     }
 
     const result = await storage.sync.get(['apiUrl', 'apiToken', 'modelName']);
-    if (!result.apiUrl || !result.apiToken || !result.modelName) {
+
+    // Use prompt-specific model if available, otherwise use global model
+    const modelName = prompt.modelName || result.modelName;
+
+    if (!result.apiUrl || !result.apiToken || !modelName) {
         alert('Error: API settings are not configured. Please configure the extension.');
         // Restore button
         button.textContent = originalText;
@@ -132,7 +136,7 @@ async function handlePromptSelection(prompt, selectedText, storage, button, orig
             action: 'callAPI',
             apiUrl: result.apiUrl,
             apiToken: result.apiToken,
-            modelName: result.modelName,
+            modelName: modelName,
             fullPrompt: fullPrompt
         }, (response) => {
             // Remove menu after receiving response
@@ -218,7 +222,11 @@ async function startPrefetch(prompt, selectedText, storage) {
     };
 
     const result = await storage.sync.get(['apiUrl', 'apiToken', 'modelName']);
-    if (!result.apiUrl || !result.apiToken || !result.modelName) {
+
+    // Use prompt-specific model if available, otherwise use global model
+    const modelName = prompt.modelName || result.modelName;
+
+    if (!result.apiUrl || !result.apiToken || !modelName) {
         prefetchCache[cacheKey] = {
             status: 'error',
             result: 'API settings not configured',
@@ -238,7 +246,7 @@ async function startPrefetch(prompt, selectedText, storage) {
             action: 'callAPI',
             apiUrl: result.apiUrl,
             apiToken: result.apiToken,
-            modelName: result.modelName,
+            modelName: modelName,
             fullPrompt: fullPrompt
         }, (response) => {
             // Only update cache if this is still the same selection session
@@ -929,6 +937,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const prompt = prompts[request.promptIndex];
 
             if (prompt) {
+                // Use model from context menu request if available, otherwise use prompt's model
+                if (request.promptModel) {
+                    prompt.modelName = request.promptModel;
+                }
+
                 // Determine what text to use
                 let textToUse = (request.selectedText || '').trim();
 
