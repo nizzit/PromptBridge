@@ -17,6 +17,7 @@ let lastMenuInteractionTime = 0; // Timestamp of last menu interaction to preven
 // Key: prompt name, Value: { status: 'loading'|'ready'|'error', result: data, selectedText: text }
 let prefetchCache = {};
 let currentMenuSelectedText = ''; // Track text for current menu session
+let minSelectionLength = 3; // Default value, will be updated from settings
 
 // Utility: generate stable cache key for prefetch
 function getPrefetchCacheKey(promptName, selectedText) {
@@ -30,7 +31,11 @@ function getStorage() {
 
 // Utility function to get selected text with consistent trimming
 function getSelectedText() {
-    return window.getSelection().toString().trim();
+    const text = window.getSelection().toString().trim();
+    if (text.length < minSelectionLength) {
+        return '';
+    }
+    return text;
 }
 
 // Function to get all text from the page
@@ -495,7 +500,12 @@ function createSelectionMenu(x, y, targetElement) {
 
     // Get menu position preference and create menu
     const storage = getStorage();
-    storage.sync.get(['prompts', 'menuPosition', 'openOnHover', 'prefetchTiming', 'enableInInputs'], function (result) {
+    storage.sync.get(['prompts', 'menuPosition', 'openOnHover', 'prefetchTiming', 'enableInInputs', 'minSelectionLength'], function (result) {
+        // Update global min selection length
+        if (result.minSelectionLength !== undefined) {
+            minSelectionLength = result.minSelectionLength;
+        }
+
         // Check if selection is in an input/textarea element
         if (targetElement) {
             const isInputField = targetElement.tagName === 'INPUT' ||
@@ -1065,17 +1075,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 // Determine what text to use
                 let textToUse = (request.selectedText || '').trim();
 
-                // If no selection and prompt supports full page, use full page text
-                if (!textToUse && prompt.useFullPage) {
-                    textToUse = getFullPageText();
-                }
+                // Get min selection length from storage to ensure we have the latest value
+                storage.sync.get(['minSelectionLength'], function (settings) {
+                    const currentMinLength = settings.minSelectionLength !== undefined ? settings.minSelectionLength : 3;
 
-                // Create a temporary button element for the loading state
-                const tempButton = document.createElement('button');
-                tempButton.textContent = prompt.name;
+                    if (textToUse.length <= currentMinLength) {
+                        textToUse = '';
+                    }
 
-                // Execute the prompt
-                handlePromptSelection(prompt, textToUse, storage, tempButton, prompt.name);
+                    // If no selection and prompt supports full page, use full page text
+                    if (!textToUse && prompt.useFullPage) {
+                        textToUse = getFullPageText();
+                    }
+
+                    // Create a temporary button element for the loading state
+                    const tempButton = document.createElement('button');
+                    tempButton.textContent = prompt.name;
+
+                    // Execute the prompt
+                    handlePromptSelection(prompt, textToUse, storage, tempButton, prompt.name);
+                });
             } else {
                 // Remove loading indicator on error
                 removeLoadingIndicator();

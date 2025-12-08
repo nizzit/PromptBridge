@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Load settings function
 function loadSettings() {
     const storage = getStorage();
-    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight', 'enableMarkdown', 'enableInInputs'], function (result) {
+    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight', 'enableMarkdown', 'enableInInputs', 'minSelectionLength'], function (result) {
         if (result.apiUrl) {
             document.getElementById('api-url').value = result.apiUrl;
         }
@@ -122,6 +122,10 @@ function loadSettings() {
         // Load enable in inputs setting (default to false)
         const enableInInputs = result.enableInInputs !== undefined ? result.enableInInputs : false;
         document.getElementById('enable-in-inputs').checked = enableInInputs;
+
+        // Load min selection length setting (default to 3)
+        const minSelectionLength = result.minSelectionLength !== undefined ? result.minSelectionLength : 3;
+        document.getElementById('min-selection-length').value = minSelectionLength;
 
         // Load markdown parsing setting (default to true)
         const enableMarkdown = result.enableMarkdown !== undefined ? result.enableMarkdown : true;
@@ -195,6 +199,7 @@ function saveSettings() {
     const prefetchTiming = document.querySelector('input[name="prefetch-timing"]:checked')?.value || 'on-button';
     const enableInInputs = document.getElementById('enable-in-inputs').checked;
     const enableMarkdown = document.getElementById('enable-markdown').checked;
+    const minSelectionLengthInput = document.getElementById('min-selection-length');
 
     const resultWidthInput = document.getElementById('result-width');
     const resultHeightInput = document.getElementById('result-height');
@@ -238,6 +243,15 @@ function saveSettings() {
         return;
     }
 
+    // Validate min selection length
+    const minSelectionLength = parseInt(minSelectionLengthInput.value);
+    const minLenMin = parseInt(minSelectionLengthInput.min);
+    const minLenMax = parseInt(minSelectionLengthInput.max);
+
+    if (isNaN(minSelectionLength) || minSelectionLength < minLenMin || minSelectionLength > minLenMax) {
+        return;
+    }
+
     // Save to storage
     const storage = getStorage();
     storage.sync.set({
@@ -250,7 +264,8 @@ function saveSettings() {
         resultWidth: resultWidth,
         resultHeight: resultHeight,
         enableInInputs: enableInInputs,
-        enableMarkdown: enableMarkdown
+        enableMarkdown: enableMarkdown,
+        minSelectionLength: minSelectionLength
     }, function () {
         // Check for errors (Chrome)
         const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
@@ -1000,6 +1015,7 @@ function exportSettings() {
         'resultHeight',
         'enableInInputs',
         'enableMarkdown',
+        'minSelectionLength',
         'prompts'
     ], function (result) {
         // Create a JSON object with all settings
