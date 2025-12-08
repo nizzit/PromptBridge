@@ -10,11 +10,14 @@ let isDragging = false;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 let isProcessing = false; // Request processing flag
+let menuCreationId = 0; // Counter to track menu creation attempts and invalidate old ones
+let lastMenuInteractionTime = 0; // Timestamp of last menu interaction to prevent duplicate creation
 
 // Prefetch cache: stores results for prompts with prefetch enabled
 // Key: prompt name, Value: { status: 'loading'|'ready'|'error', result: data, selectedText: text }
 let prefetchCache = {};
 let currentMenuSelectedText = ''; // Track text for current menu session
+let minSelectionLength = 3; // Default value, will be updated from settings
 
 // Utility: generate stable cache key for prefetch
 function getPrefetchCacheKey(promptName, selectedText) {
@@ -28,7 +31,11 @@ function getStorage() {
 
 // Utility function to get selected text with consistent trimming
 function getSelectedText() {
-    return window.getSelection().toString().trim();
+    const text = window.getSelection().toString().trim();
+    if (text.length < minSelectionLength) {
+        return '';
+    }
+    return text;
 }
 
 // Function to get all text from the page
@@ -56,7 +63,12 @@ function createPromptButton(prompt, storage) {
     button.className = 'prompt-button';
     button.style.display = 'none'; // Initially hidden
 
-    button.addEventListener('click', async function () {
+    button.addEventListener('click', async function (event) {
+        // Prevent event from bubbling to document mouseup handler
+        event.stopPropagation();
+        // Mark interaction time
+        lastMenuInteractionTime = Date.now();
+
         const selectedText = getSelectedText();
 
         // Hide all other prompt buttons
@@ -188,17 +200,28 @@ function createStyledButton(text, className, additionalClasses = []) {
 
 // Utility function to remove element with fade-out animation
 function removeElementWithFadeOut(element, callback = null) {
-    if (!element) return;
+    if (!element) {
+        if (callback) callback();
+        return;
+    }
+
+    // Check if element is still in the DOM
+    if (!element.parentNode) {
+        if (callback) callback();
+        return;
+    }
 
     // Apply fade out animation
     element.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+    element.classList.add('closing');
 
     // Wait for animation to complete before removing
     setTimeout(() => {
+        // Double-check element still exists and has a parent before removing
         if (element && element.parentNode) {
-            document.body.removeChild(element);
-            if (callback) callback();
+            element.parentNode.removeChild(element);
         }
+        if (callback) callback();
     }, 200); // Match animation duration
 }
 
@@ -422,15 +445,48 @@ function calculateMenuPosition(cursorX, cursorY, menuPosition) {
     return { x, y };
 }
 
+// Function to forcefully remove all existing menus from DOM (prevents duplicates)
+function removeAllExistingMenus() {
+    // Find and remove all prompt-menu elements
+    const existingMenus = document.querySelectorAll('.prompt-menu');
+    existingMenus.forEach(menu => {
+        if (menu && menu.parentNode) {
+            menu.parentNode.removeChild(menu);
+        }
+    });
+
+    // Also find and remove any loading indicators
+    const existingIndicators = document.querySelectorAll('.loading-indicator');
+    existingIndicators.forEach(indicator => {
+        if (indicator && indicator.parentNode) {
+            indicator.parentNode.removeChild(indicator);
+        }
+    });
+
+    // Reset the selectionMenu reference if it was removed
+    if (selectionMenu && !document.body.contains(selectionMenu)) {
+        selectionMenu = null;
+    }
+
+    // Reset the loadingIndicator reference if it was removed
+    if (loadingIndicator && !document.body.contains(loadingIndicator)) {
+        loadingIndicator = null;
+    }
+}
+
 // Function to create selection menu with toggle button and prompt buttons
-function createSelectionMenu(x, y) {
+function createSelectionMenu(x, y, targetElement) {
     // Don't create new menu while processing request
     if (isProcessing) {
         return;
     }
 
-    // Remove existing menu if it exists
-    removeSelectionMenu();
+    // Increment creation ID to invalidate any pending creations
+    menuCreationId++;
+    const currentId = menuCreationId;
+
+    // Force remove ALL existing menus from DOM (prevent duplicates on fast selection)
+    removeAllExistingMenus();
 
     // Check if there is selected text
     const selectedText = getSelectedText();
@@ -444,7 +500,35 @@ function createSelectionMenu(x, y) {
 
     // Get menu position preference and create menu
     const storage = getStorage();
-    storage.sync.get(['prompts', 'menuPosition', 'openOnHover', 'prefetchTiming'], function (result) {
+    storage.sync.get(['prompts', 'menuPosition', 'openOnHover', 'prefetchTiming', 'enableInInputs', 'minSelectionLength', 'enableFloatingButton'], function (result) {
+        // Update global min selection length
+        if (result.minSelectionLength !== undefined) {
+            minSelectionLength = result.minSelectionLength;
+        }
+
+        // Check if floating button is enabled (default to true)
+        const enableFloatingButton = result.enableFloatingButton !== undefined ? result.enableFloatingButton : true;
+        if (!enableFloatingButton) {
+            return; // Don't create menu if floating button is disabled
+        }
+
+        // Check if selection is in an input/textarea element
+        if (targetElement) {
+            const isInputField = targetElement.tagName === 'INPUT' ||
+                targetElement.tagName === 'TEXTAREA' ||
+                targetElement.isContentEditable;
+
+            // If enableInInputs is false (default), don't show menu in input fields
+            const enableInInputs = result.enableInInputs !== undefined ? result.enableInInputs : false;
+            if (isInputField && !enableInInputs) {
+                return; // Don't create menu in input fields when disabled
+            }
+        }
+        // Check if this creation is still valid (i.e., no new creation started in the meantime)
+        if (currentId !== menuCreationId) {
+            return;
+        }
+
         const prompts = result.prompts || [];
         const menuPosition = result.menuPosition || 'middle-center';
         const openOnHover = result.openOnHover || false;
@@ -460,7 +544,12 @@ function createSelectionMenu(x, y) {
         const toggleButton = createStyledButton('✨', 'selection-button');
 
         // Add click handler for manual toggle
-        toggleButton.addEventListener('click', function () {
+        toggleButton.addEventListener('click', function (event) {
+            // Prevent event from bubbling to document mouseup handler
+            event.stopPropagation();
+            // Mark interaction time
+            lastMenuInteractionTime = Date.now();
+
             // Start prefetch on menu open if timing is set to on-menu
             const shouldStartPrefetch = (prefetchTiming === 'on-menu');
             togglePromptButtons(shouldStartPrefetch);
@@ -468,7 +557,10 @@ function createSelectionMenu(x, y) {
 
         // Add hover handlers if enabled
         if (openOnHover) {
-            toggleButton.addEventListener('mouseenter', function () {
+            toggleButton.addEventListener('mouseenter', function (event) {
+                // Mark interaction time
+                lastMenuInteractionTime = Date.now();
+
                 const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
                 promptButtons.forEach(button => {
                     button.style.display = 'block';
@@ -481,7 +573,7 @@ function createSelectionMenu(x, y) {
                 }
             });
 
-            selectionMenu.addEventListener('mouseleave', function () {
+            selectionMenu.addEventListener('mouseleave', function (event) {
                 const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
                 promptButtons.forEach(button => {
                     button.style.animation = 'fadeOutButton 0.2s ease-out forwards';
@@ -495,14 +587,32 @@ function createSelectionMenu(x, y) {
                     });
                 }, 200);
             });
+
+            // Prevent mouseup events on the menu from creating new menus
+            selectionMenu.addEventListener('mouseup', function (event) {
+                event.stopPropagation();
+                lastMenuInteractionTime = Date.now();
+            });
         }
+
+        // Always prevent mouseup events on the menu from creating new menus
+        // (regardless of hover mode)
+        selectionMenu.addEventListener('mouseup', function (event) {
+            event.stopPropagation();
+            lastMenuInteractionTime = Date.now();
+        });
 
         selectionMenu.appendChild(toggleButton);
 
         if (prompts.length === 0) {
             const settingsButton = createStyledButton('Open Settings', 'prompt-button');
             settingsButton.style.display = 'none';
-            settingsButton.addEventListener('click', function () {
+            settingsButton.addEventListener('click', function (event) {
+                // Prevent event from bubbling to document mouseup handler
+                event.stopPropagation();
+                // Mark interaction time
+                lastMenuInteractionTime = Date.now();
+
                 removeSelectionMenu();
                 chrome.runtime.sendMessage({ action: 'openOptions' });
             });
@@ -523,16 +633,21 @@ function createSelectionMenu(x, y) {
         if (selectionMenu && selectionMenu.parentNode === null) {
             document.body.appendChild(selectionMenu);
         }
+
     });
 }
 
 // Function to remove selection menu
 function removeSelectionMenu() {
+    const menuToRemove = selectionMenu;
     removeElementWithFadeOut(selectionMenu, () => {
-        selectionMenu = null;
-        // Clear prefetch cache when menu is removed
-        prefetchCache = {};
-        currentMenuSelectedText = '';
+        // Only reset global state if the global selectionMenu is still the one we removed
+        if (selectionMenu === menuToRemove) {
+            selectionMenu = null;
+            // Clear prefetch cache when menu is removed
+            prefetchCache = {};
+            currentMenuSelectedText = '';
+        }
     });
 }
 
@@ -827,6 +942,9 @@ function createResultOverlay(text) {
 
 // Function to create loading indicator for context menu requests
 function createLoadingIndicator() {
+    // Force remove ALL existing menus and indicators (prevent duplicates)
+    removeAllExistingMenus();
+
     // Remove existing indicator if any
     removeLoadingIndicator();
 
@@ -846,15 +964,21 @@ function createLoadingIndicator() {
 
 // Function to remove loading indicator
 function removeLoadingIndicator() {
-    removeElementWithFadeOut(loadingIndicator, () => {
-        loadingIndicator = null;
+    const indicatorToRemove = loadingIndicator;
+    removeElementWithFadeOut(indicatorToRemove, () => {
+        if (loadingIndicator === indicatorToRemove) {
+            loadingIndicator = null;
+        }
     });
 }
 
 // Function to remove result overlay
 function removeResultOverlay() {
-    removeElementWithFadeOut(resultOverlay, () => {
-        resultOverlay = null;
+    const overlayToRemove = resultOverlay;
+    removeElementWithFadeOut(overlayToRemove, () => {
+        if (resultOverlay === overlayToRemove) {
+            resultOverlay = null;
+        }
     });
 }
 
@@ -871,8 +995,52 @@ document.addEventListener('mouseup', function (event) {
         return;
     }
 
-    // If clicked on result overlay, don't recreate menu
+    // Check if clicked on result overlay
     if (resultOverlay && resultOverlay.contains(event.target)) {
+        // Get setting for enabling floating button in result window
+        const storage = getStorage();
+        storage.sync.get(['enableFloatingButtonInResult'], function (result) {
+            const enableFloatingButtonInResult = result.enableFloatingButtonInResult !== undefined ? result.enableFloatingButtonInResult : false;
+
+            // If setting is disabled (default), don't create menu in result overlay
+            if (!enableFloatingButtonInResult) {
+                return;
+            }
+
+            // If setting is enabled, proceed with menu creation
+            // Save cursor position
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
+
+            // Use setTimeout to check selection after browser processes the click
+            setTimeout(() => {
+                // Check if there is selected text before creating menu
+                const selectedText = getSelectedText();
+                if (!selectedText) {
+                    return; // Don't create menu if no selection
+                }
+
+                // Reset interaction time if this is a new selection (different text or no menu exists)
+                const existingMenu = document.querySelector('.prompt-menu');
+                if (!existingMenu || !existingMenu.parentNode || currentMenuSelectedText !== selectedText) {
+                    // This is a new selection, allow menu creation
+                    lastMenuInteractionTime = 0;
+                }
+
+                // Don't create menu if we just interacted with existing menu (within 100ms)
+                if (Date.now() - lastMenuInteractionTime < 100) {
+                    return;
+                }
+
+                // Don't create new menu if one already exists in DOM and is not closing
+                if (existingMenu && existingMenu.parentNode && !existingMenu.classList.contains('closing')) {
+                    return;
+                }
+
+                // Position menu near cursor, pass the target element for input field detection
+                createSelectionMenu(lastMouseX + window.scrollX, lastMouseY + window.scrollY, event.target);
+            }, 10);
+        });
         return;
     }
 
@@ -888,8 +1056,26 @@ document.addEventListener('mouseup', function (event) {
             return; // Don't create menu if no selection
         }
 
-        // Position menu near cursor
-        createSelectionMenu(lastMouseX + window.scrollX, lastMouseY + window.scrollY);
+        // Reset interaction time if this is a new selection (different text or no menu exists)
+        const existingMenu = document.querySelector('.prompt-menu');
+        if (!existingMenu || !existingMenu.parentNode || currentMenuSelectedText !== selectedText) {
+            // This is a new selection, allow menu creation
+            lastMenuInteractionTime = 0;
+        }
+
+        // Don't create menu if we just interacted with existing menu (within 100ms)
+        if (Date.now() - lastMenuInteractionTime < 100) {
+            return;
+        }
+
+        // Don't create new menu if one already exists in DOM (check actual DOM, not variable)
+        // Don't create new menu if one already exists in DOM and is not closing
+        if (existingMenu && existingMenu.parentNode && !existingMenu.classList.contains('closing')) {
+            return;
+        }
+
+        // Position menu near cursor, pass the target element for input field detection
+        createSelectionMenu(lastMouseX + window.scrollX, lastMouseY + window.scrollY, event.target);
     }, 10);
 });
 
@@ -945,17 +1131,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 // Determine what text to use
                 let textToUse = (request.selectedText || '').trim();
 
-                // If no selection and prompt supports full page, use full page text
-                if (!textToUse && prompt.useFullPage) {
-                    textToUse = getFullPageText();
-                }
+                // Get min selection length from storage to ensure we have the latest value
+                storage.sync.get(['minSelectionLength'], function (settings) {
+                    const currentMinLength = settings.minSelectionLength !== undefined ? settings.minSelectionLength : 3;
 
-                // Create a temporary button element for the loading state
-                const tempButton = document.createElement('button');
-                tempButton.textContent = prompt.name;
+                    if (textToUse.length <= currentMinLength) {
+                        textToUse = '';
+                    }
 
-                // Execute the prompt
-                handlePromptSelection(prompt, textToUse, storage, tempButton, prompt.name);
+                    // If no selection and prompt supports full page, use full page text
+                    if (!textToUse && prompt.useFullPage) {
+                        textToUse = getFullPageText();
+                    }
+
+                    // Create a temporary button element for the loading state
+                    const tempButton = document.createElement('button');
+                    tempButton.textContent = prompt.name;
+
+                    // Execute the prompt
+                    handlePromptSelection(prompt, textToUse, storage, tempButton, prompt.name);
+                });
             } else {
                 // Remove loading indicator on error
                 removeLoadingIndicator();
