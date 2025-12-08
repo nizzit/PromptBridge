@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Load settings function
 function loadSettings() {
     const storage = getStorage();
-    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight', 'enableMarkdown', 'enableInInputs', 'minSelectionLength'], function (result) {
+    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight', 'enableMarkdown', 'enableInInputs', 'minSelectionLength', 'enableFloatingButton'], function (result) {
         if (result.apiUrl) {
             document.getElementById('api-url').value = result.apiUrl;
         }
@@ -130,6 +130,10 @@ function loadSettings() {
         // Load markdown parsing setting (default to true)
         const enableMarkdown = result.enableMarkdown !== undefined ? result.enableMarkdown : true;
         document.getElementById('enable-markdown').checked = enableMarkdown;
+
+        // Load enable floating button setting (default to true)
+        const enableFloatingButton = result.enableFloatingButton !== undefined ? result.enableFloatingButton : true;
+        document.getElementById('enable-floating-button').checked = enableFloatingButton;
 
         // Auto-fetch models if URL and token are available
         if (result.apiUrl && result.apiToken) {
@@ -199,6 +203,7 @@ function saveSettings() {
     const prefetchTiming = document.querySelector('input[name="prefetch-timing"]:checked')?.value || 'on-button';
     const enableInInputs = document.getElementById('enable-in-inputs').checked;
     const enableMarkdown = document.getElementById('enable-markdown').checked;
+    const enableFloatingButton = document.getElementById('enable-floating-button').checked;
     const minSelectionLengthInput = document.getElementById('min-selection-length');
 
     const resultWidthInput = document.getElementById('result-width');
@@ -265,7 +270,8 @@ function saveSettings() {
         resultHeight: resultHeight,
         enableInInputs: enableInInputs,
         enableMarkdown: enableMarkdown,
-        minSelectionLength: minSelectionLength
+        minSelectionLength: minSelectionLength,
+        enableFloatingButton: enableFloatingButton
     }, function () {
         // Check for errors (Chrome)
         const lastError = typeof chrome !== 'undefined' ? chrome.runtime.lastError : null;
@@ -1016,6 +1022,7 @@ function exportSettings() {
         'enableInInputs',
         'enableMarkdown',
         'minSelectionLength',
+        'enableFloatingButton',
         'prompts'
     ], function (result) {
         // Create a JSON object with all settings

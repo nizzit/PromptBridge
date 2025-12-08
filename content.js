@@ -500,10 +500,16 @@ function createSelectionMenu(x, y, targetElement) {
 
     // Get menu position preference and create menu
     const storage = getStorage();
-    storage.sync.get(['prompts', 'menuPosition', 'openOnHover', 'prefetchTiming', 'enableInInputs', 'minSelectionLength'], function (result) {
+    storage.sync.get(['prompts', 'menuPosition', 'openOnHover', 'prefetchTiming', 'enableInInputs', 'minSelectionLength', 'enableFloatingButton'], function (result) {
         // Update global min selection length
         if (result.minSelectionLength !== undefined) {
             minSelectionLength = result.minSelectionLength;
+        }
+
+        // Check if floating button is enabled (default to true)
+        const enableFloatingButton = result.enableFloatingButton !== undefined ? result.enableFloatingButton : true;
+        if (!enableFloatingButton) {
+            return; // Don't create menu if floating button is disabled
         }
 
         // Check if selection is in an input/textarea element
