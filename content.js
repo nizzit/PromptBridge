@@ -470,7 +470,7 @@ function removeAllExistingMenus() {
 }
 
 // Function to create selection menu with toggle button and prompt buttons
-function createSelectionMenu(x, y) {
+function createSelectionMenu(x, y, targetElement) {
     // Don't create new menu while processing request
     if (isProcessing) {
         return;
@@ -495,7 +495,19 @@ function createSelectionMenu(x, y) {
 
     // Get menu position preference and create menu
     const storage = getStorage();
-    storage.sync.get(['prompts', 'menuPosition', 'openOnHover', 'prefetchTiming'], function (result) {
+    storage.sync.get(['prompts', 'menuPosition', 'openOnHover', 'prefetchTiming', 'enableInInputs'], function (result) {
+        // Check if selection is in an input/textarea element
+        if (targetElement) {
+            const isInputField = targetElement.tagName === 'INPUT' ||
+                targetElement.tagName === 'TEXTAREA' ||
+                targetElement.isContentEditable;
+
+            // If enableInInputs is false (default), don't show menu in input fields
+            const enableInInputs = result.enableInInputs !== undefined ? result.enableInInputs : false;
+            if (isInputField && !enableInInputs) {
+                return; // Don't create menu in input fields when disabled
+            }
+        }
         // Check if this creation is still valid (i.e., no new creation started in the meantime)
         if (currentId !== menuCreationId) {
             return;
@@ -996,8 +1008,8 @@ document.addEventListener('mouseup', function (event) {
             return;
         }
 
-        // Position menu near cursor
-        createSelectionMenu(lastMouseX + window.scrollX, lastMouseY + window.scrollY);
+        // Position menu near cursor, pass the target element for input field detection
+        createSelectionMenu(lastMouseX + window.scrollX, lastMouseY + window.scrollY, event.target);
     }, 10);
 });
 

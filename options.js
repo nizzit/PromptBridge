@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Load settings function
 function loadSettings() {
     const storage = getStorage();
-    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight', 'enableMarkdown'], function (result) {
+    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight', 'enableMarkdown', 'enableInInputs'], function (result) {
         if (result.apiUrl) {
             document.getElementById('api-url').value = result.apiUrl;
         }
@@ -118,6 +118,10 @@ function loadSettings() {
         const resultHeight = result.resultHeight || DEFAULT_RESULT_HEIGHT;
         document.getElementById('result-width').value = resultWidth;
         document.getElementById('result-height').value = resultHeight;
+
+        // Load enable in inputs setting (default to false)
+        const enableInInputs = result.enableInInputs !== undefined ? result.enableInInputs : false;
+        document.getElementById('enable-in-inputs').checked = enableInInputs;
 
         // Load markdown parsing setting (default to true)
         const enableMarkdown = result.enableMarkdown !== undefined ? result.enableMarkdown : true;
@@ -189,6 +193,7 @@ function saveSettings() {
     const menuPosition = document.querySelector('input[name="menu-position"]:checked')?.value || 'middle-center';
     const openOnHover = document.getElementById('open-on-hover').checked;
     const prefetchTiming = document.querySelector('input[name="prefetch-timing"]:checked')?.value || 'on-button';
+    const enableInInputs = document.getElementById('enable-in-inputs').checked;
     const enableMarkdown = document.getElementById('enable-markdown').checked;
 
     const resultWidthInput = document.getElementById('result-width');
@@ -244,6 +249,7 @@ function saveSettings() {
         prefetchTiming: prefetchTiming,
         resultWidth: resultWidth,
         resultHeight: resultHeight,
+        enableInInputs: enableInInputs,
         enableMarkdown: enableMarkdown
     }, function () {
         // Check for errors (Chrome)
@@ -992,6 +998,7 @@ function exportSettings() {
         'prefetchTiming',
         'resultWidth',
         'resultHeight',
+        'enableInInputs',
         'enableMarkdown',
         'prompts'
     ], function (result) {
