@@ -964,15 +964,21 @@ function createLoadingIndicator() {
 
 // Function to remove loading indicator
 function removeLoadingIndicator() {
-    removeElementWithFadeOut(loadingIndicator, () => {
-        loadingIndicator = null;
+    const indicatorToRemove = loadingIndicator;
+    removeElementWithFadeOut(indicatorToRemove, () => {
+        if (loadingIndicator === indicatorToRemove) {
+            loadingIndicator = null;
+        }
     });
 }
 
 // Function to remove result overlay
 function removeResultOverlay() {
-    removeElementWithFadeOut(resultOverlay, () => {
-        resultOverlay = null;
+    const overlayToRemove = resultOverlay;
+    removeElementWithFadeOut(overlayToRemove, () => {
+        if (resultOverlay === overlayToRemove) {
+            resultOverlay = null;
+        }
     });
 }
 
