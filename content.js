@@ -995,8 +995,52 @@ document.addEventListener('mouseup', function (event) {
         return;
     }
 
-    // If clicked on result overlay, don't recreate menu
+    // Check if clicked on result overlay
     if (resultOverlay && resultOverlay.contains(event.target)) {
+        // Get setting for enabling floating button in result window
+        const storage = getStorage();
+        storage.sync.get(['enableFloatingButtonInResult'], function (result) {
+            const enableFloatingButtonInResult = result.enableFloatingButtonInResult !== undefined ? result.enableFloatingButtonInResult : false;
+
+            // If setting is disabled (default), don't create menu in result overlay
+            if (!enableFloatingButtonInResult) {
+                return;
+            }
+
+            // If setting is enabled, proceed with menu creation
+            // Save cursor position
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
+
+            // Use setTimeout to check selection after browser processes the click
+            setTimeout(() => {
+                // Check if there is selected text before creating menu
+                const selectedText = getSelectedText();
+                if (!selectedText) {
+                    return; // Don't create menu if no selection
+                }
+
+                // Reset interaction time if this is a new selection (different text or no menu exists)
+                const existingMenu = document.querySelector('.prompt-menu');
+                if (!existingMenu || !existingMenu.parentNode || currentMenuSelectedText !== selectedText) {
+                    // This is a new selection, allow menu creation
+                    lastMenuInteractionTime = 0;
+                }
+
+                // Don't create menu if we just interacted with existing menu (within 100ms)
+                if (Date.now() - lastMenuInteractionTime < 100) {
+                    return;
+                }
+
+                // Don't create new menu if one already exists in DOM and is not closing
+                if (existingMenu && existingMenu.parentNode && !existingMenu.classList.contains('closing')) {
+                    return;
+                }
+
+                // Position menu near cursor, pass the target element for input field detection
+                createSelectionMenu(lastMouseX + window.scrollX, lastMouseY + window.scrollY, event.target);
+            }, 10);
+        });
         return;
     }
 
