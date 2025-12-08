@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.7] - 2025-12-08
+
+### Added
+- Floating button option for result window
+- Toggle for floating button visibility
+- Configurable minimum selection length
+- Option to enable selection menu in input fields
+
+### Fixed
+- Prevent duplicate menu creation on text selection
+
 ## [1.0.6] - 2025-12-04
 
 ### Added
