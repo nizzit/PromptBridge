@@ -60,7 +60,7 @@ function getFullPageText() {
 function createPromptButton(prompt, storage) {
     const button = document.createElement('button');
     button.textContent = prompt.name;
-    button.className = 'prompt-button';
+    button.className = 'pb-prompt-button';
     button.style.display = 'none'; // Initially hidden
 
     button.addEventListener('click', async function (event) {
@@ -72,13 +72,13 @@ function createPromptButton(prompt, storage) {
         const selectedText = getSelectedText();
 
         // Hide all other prompt buttons
-        const allButtons = selectionMenu.querySelectorAll('.prompt-button');
+        const allButtons = selectionMenu.querySelectorAll('.pb-prompt-button');
         allButtons.forEach(btn => {
             btn.style.display = 'none';
         });
 
         // Show spinner on selection button
-        const selectionButton = selectionMenu.querySelector('.selection-button');
+        const selectionButton = selectionMenu.querySelector('.pb-selection-button');
         selectionButton.classList.add('disabled', 'loading');
 
         // Set processing flag
@@ -212,7 +212,7 @@ function removeElementWithFadeOut(element, callback = null) {
     }
 
     // Apply fade out animation
-    element.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+    element.style.animation = 'pb-fadeOutButton 0.2s ease-out forwards';
     element.classList.add('closing');
 
     // Wait for animation to complete before removing
@@ -341,13 +341,13 @@ function executePrefetchCallbacks(cacheKey) {
 function togglePromptButtons(shouldStartPrefetch = false) {
     if (!selectionMenu) return;
 
-    const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
+    const promptButtons = selectionMenu.querySelectorAll('.pb-prompt-button');
     const isVisible = promptButtons[0]?.style.display !== 'none';
 
     if (isVisible) {
         // Hide with animation
         promptButtons.forEach(button => {
-            button.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+            button.style.animation = 'pb-fadeOutButton 0.2s ease-out forwards';
         });
 
         setTimeout(() => {
@@ -360,7 +360,7 @@ function togglePromptButtons(shouldStartPrefetch = false) {
         // Show with animation
         promptButtons.forEach(button => {
             button.style.display = 'block';
-            button.style.animation = 'fadeInButton 0.2s ease-out forwards';
+            button.style.animation = 'pb-fadeInButton 0.2s ease-out forwards';
         });
 
         // Start prefetch if requested (for on-menu timing)
@@ -448,7 +448,7 @@ function calculateMenuPosition(cursorX, cursorY, menuPosition) {
 // Function to forcefully remove all existing menus from DOM (prevents duplicates)
 function removeAllExistingMenus() {
     // Find and remove all prompt-menu elements
-    const existingMenus = document.querySelectorAll('.prompt-menu');
+    const existingMenus = document.querySelectorAll('.pb-prompt-menu');
     existingMenus.forEach(menu => {
         if (menu && menu.parentNode) {
             menu.parentNode.removeChild(menu);
@@ -456,7 +456,7 @@ function removeAllExistingMenus() {
     });
 
     // Also find and remove any loading indicators
-    const existingIndicators = document.querySelectorAll('.loading-indicator');
+    const existingIndicators = document.querySelectorAll('.pb-loading-indicator');
     existingIndicators.forEach(indicator => {
         if (indicator && indicator.parentNode) {
             indicator.parentNode.removeChild(indicator);
@@ -538,10 +538,10 @@ function createSelectionMenu(x, y, targetElement) {
         const position = calculateMenuPosition(x, y, menuPosition);
 
         // Create menu container
-        selectionMenu = createPositionedContainer('prompt-menu', position.x, position.y);
+        selectionMenu = createPositionedContainer('pb-prompt-menu', position.x, position.y);
 
         // Create toggle button (SelectionButton)
-        const toggleButton = createStyledButton('✨', 'selection-button');
+        const toggleButton = createStyledButton('✨', 'pb-selection-button');
 
         // Add click handler for manual toggle
         toggleButton.addEventListener('click', function (event) {
@@ -561,10 +561,10 @@ function createSelectionMenu(x, y, targetElement) {
                 // Mark interaction time
                 lastMenuInteractionTime = Date.now();
 
-                const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
+                const promptButtons = selectionMenu.querySelectorAll('.pb-prompt-button');
                 promptButtons.forEach(button => {
                     button.style.display = 'block';
-                    button.style.animation = 'fadeInButton 0.2s ease-out forwards';
+                    button.style.animation = 'pb-fadeInButton 0.2s ease-out forwards';
                 });
 
                 // Start prefetch on menu open if timing is set to on-menu
@@ -574,13 +574,13 @@ function createSelectionMenu(x, y, targetElement) {
             });
 
             selectionMenu.addEventListener('mouseleave', function (event) {
-                const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
+                const promptButtons = selectionMenu.querySelectorAll('.pb-prompt-button');
                 promptButtons.forEach(button => {
-                    button.style.animation = 'fadeOutButton 0.2s ease-out forwards';
+                    button.style.animation = 'pb-fadeOutButton 0.2s ease-out forwards';
                 });
 
                 setTimeout(() => {
-                    const promptButtons = selectionMenu.querySelectorAll('.prompt-button');
+                    const promptButtons = selectionMenu.querySelectorAll('.pb-prompt-button');
                     promptButtons.forEach(button => {
                         button.style.display = 'none';
                         button.style.animation = ''; // Reset animation
@@ -605,7 +605,7 @@ function createSelectionMenu(x, y, targetElement) {
         selectionMenu.appendChild(toggleButton);
 
         if (prompts.length === 0) {
-            const settingsButton = createStyledButton('Open Settings', 'prompt-button');
+            const settingsButton = createStyledButton('Open Settings', 'pb-prompt-button');
             settingsButton.style.display = 'none';
             settingsButton.addEventListener('click', function (event) {
                 // Prevent event from bubbling to document mouseup handler
@@ -706,7 +706,7 @@ function calculateOverlayPosition(overlayWidth) {
 function setOptimalOverlaySize(maxWidth, maxHeight) {
     if (!resultOverlay) return;
 
-    const content = resultOverlay.querySelector('.overlay-content');
+    const content = resultOverlay.querySelector('.pb-overlay-content');
     if (!content) return;
 
     // Temporarily set max dimensions to measure content
@@ -719,7 +719,7 @@ function setOptimalOverlaySize(maxWidth, maxHeight) {
     const contentHeight = content.scrollHeight;
 
     // Get header height
-    const header = resultOverlay.querySelector('.overlay-header');
+    const header = resultOverlay.querySelector('.pb-overlay-header');
     const headerHeight = header ? header.offsetHeight : 0;
     const padding = 16; // 8px padding on each side
 
@@ -768,7 +768,7 @@ function adjustOverlayPosition() {
 function createOverlayContainer(overlayWidth) {
     const position = calculateOverlayPosition(overlayWidth);
     resultOverlay = document.createElement('div');
-    resultOverlay.className = 'result-overlay';
+    resultOverlay.className = 'pb-result-overlay';
     resultOverlay.style.left = `${position.x}px`;
     resultOverlay.style.top = `${position.y}px`;
     return resultOverlay;
@@ -777,7 +777,7 @@ function createOverlayContainer(overlayWidth) {
 // Function to create overlay header
 function createOverlayHeader() {
     const header = document.createElement('div');
-    header.className = 'overlay-header';
+    header.className = 'pb-overlay-header';
     return header;
 }
 
@@ -875,7 +875,7 @@ function sanitizeParsedMarkdown(unsafeHTML) {
 // Function to create overlay content
 function createOverlayContent(text, enableMarkdown = true) {
     const content = document.createElement('div');
-    content.className = 'overlay-content';
+    content.className = 'pb-overlay-content';
 
     if (enableMarkdown) {
         const unsafeHtml = parseMarkdown(text);
@@ -953,10 +953,10 @@ function createLoadingIndicator() {
     const y = (lastMouseY || window.innerHeight / 2) + window.scrollY;
 
     // Create loading indicator container
-    loadingIndicator = createPositionedContainer('loading-indicator', x, y);
+    loadingIndicator = createPositionedContainer('pb-loading-indicator', x, y);
 
     // Create spinner button
-    const spinnerButton = createStyledButton('✨', 'selection-button', ['loading', 'disabled']);
+    const spinnerButton = createStyledButton('✨', 'pb-selection-button', ['loading', 'disabled']);
     loadingIndicator.appendChild(spinnerButton);
 
     document.body.appendChild(loadingIndicator);
@@ -1021,7 +1021,7 @@ document.addEventListener('mouseup', function (event) {
                 }
 
                 // Reset interaction time if this is a new selection (different text or no menu exists)
-                const existingMenu = document.querySelector('.prompt-menu');
+                const existingMenu = document.querySelector('.pb-prompt-menu');
                 if (!existingMenu || !existingMenu.parentNode || currentMenuSelectedText !== selectedText) {
                     // This is a new selection, allow menu creation
                     lastMenuInteractionTime = 0;
@@ -1057,7 +1057,7 @@ document.addEventListener('mouseup', function (event) {
         }
 
         // Reset interaction time if this is a new selection (different text or no menu exists)
-        const existingMenu = document.querySelector('.prompt-menu');
+        const existingMenu = document.querySelector('.pb-prompt-menu');
         if (!existingMenu || !existingMenu.parentNode || currentMenuSelectedText !== selectedText) {
             // This is a new selection, allow menu creation
             lastMenuInteractionTime = 0;
@@ -1109,6 +1109,7 @@ document.addEventListener('contextmenu', function (event) {
         removeSelectionMenu();
     }
 });
+
 
 
 // Listen for messages from background script (context menu)
