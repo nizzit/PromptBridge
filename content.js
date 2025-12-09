@@ -1087,7 +1087,7 @@ document.addEventListener('mousedown', function (event) {
     if (selectionMenu && !selectionMenu.contains(event.target) && !isProcessing) {
         removeSelectionMenu();
     }
-    if (resultOverlay && !resultOverlay.contains(event.target)) {
+    if (resultOverlay && !resultOverlay.contains(event.target) && (!selectionMenu || !selectionMenu.contains(event.target))) {
         removeResultOverlay();
     }
 });
