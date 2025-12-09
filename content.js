@@ -580,6 +580,7 @@ function createSelectionMenu(x, y, targetElement) {
                 });
 
                 setTimeout(() => {
+                    if (!selectionMenu) return;
                     const promptButtons = selectionMenu.querySelectorAll('.pb-prompt-button');
                     promptButtons.forEach(button => {
                         button.style.display = 'none';
