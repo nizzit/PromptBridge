@@ -5,7 +5,6 @@
     "description": "An extension to send selected text to a custom API provider using configurable prompts.",
     "permissions": [
         "activeTab",
-        "scripting",
         "storage",
         "contextMenus"
     ],
