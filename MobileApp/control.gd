@@ -22,14 +22,6 @@ func _ready():
 	if OS.get_name() == "Android":
 		check_intent()
 
-func _on_content_placeholder_gui_input(event):
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		activate_content_editor()
-
-func activate_content_editor():
-	%ContentPlaceholderMargin.visible = false
-	%ContentText.grab_focus()
-
 func _process(_delta):
 	# Continuous check for intent updates if needed, though mostly handled in _ready
 	if OS.get_name() == "Android":
