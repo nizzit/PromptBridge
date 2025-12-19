@@ -100,7 +100,7 @@ func render_prompts_list():
 		var prompt = Global.settings.prompts[i]
 		var btn = Button.new()
 		btn.text = prompt.name
-		btn.custom_minimum_size = Vector2(0, 60)
+		btn.custom_minimum_size = Vector2(0, 80)
 		btn.pressed.connect(_on_prompt_clicked.bind(i))
 		%PromptList.add_child(btn)
 
@@ -208,11 +208,13 @@ func render_settings_prompts():
 		
 		var edit_btn = Button.new()
 		edit_btn.text = "EDIT"
+		edit_btn.custom_minimum_size = Vector2(0, 80)
 		edit_btn.pressed.connect(open_prompt_editor.bind(i))
 		hbox.add_child(edit_btn)
 		
 		var del_btn = Button.new()
 		del_btn.text = "DEL"
+		del_btn.custom_minimum_size = Vector2(0, 80)
 		del_btn.pressed.connect(delete_prompt.bind(i))
 		hbox.add_child(del_btn)
 		

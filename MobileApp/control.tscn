@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://dt1vtflb4ddxh"]
+[gd_scene load_steps=7 format=3 uid="uid://dt1vtflb4ddxh"]
 
 [ext_resource type="Script" uid="uid://sovtgq2fyrd2" path="res://control.gd" id="1_0fbet"]
 [ext_resource type="StyleBox" uid="uid://cn8hsvifuohj7" path="res://style/control.tres" id="2_62e2m"]
 [ext_resource type="Theme" path="res://style/main_theme.tres" id="3_theme"]
 [ext_resource type="Script" uid="uid://i7thhdyxdtly" path="res://SafeAreaMargin.gd" id="4_safe_area"]
+[ext_resource type="Texture2D" uid="uid://dnc4u7wt8ygl4" path="res://assets/settings.svg" id="5_kbped"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0fbet"]
 bg_color = Color(1, 1, 1, 1)
@@ -51,15 +52,14 @@ theme_override_constants/separation = 20
 
 [node name="Header" type="HBoxContainer" parent="Background/MarginContainer/MainView"]
 layout_mode = 2
-
-[node name="Title" type="Label" parent="Background/MarginContainer/MainView/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "PromptBridge"
+size_flags_horizontal = 8
 
 [node name="MenuButton" type="Button" parent="Background/MarginContainer/MainView/Header"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-text = "SETTINGS"
+size_flags_horizontal = 8
+icon = ExtResource("5_kbped")
+flat = true
 
 [node name="Content" type="Panel" parent="Background/MarginContainer/MainView"]
 custom_minimum_size = Vector2(0, 200)
@@ -94,7 +94,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 6
-theme_override_constants/separation = 10
+theme_override_constants/separation = 30
 
 [node name="ContentPlaceholderMargin" type="MarginContainer" parent="Background/MarginContainer/MainView/Content"]
 unique_name_in_owner = true
@@ -128,7 +128,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 15
+theme_override_constants/separation = 30
 
 [node name="Header" type="HBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer"]
 layout_mode = 2
@@ -139,14 +139,17 @@ size_flags_horizontal = 3
 text = "Settings"
 
 [node name="ImportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 text = "IMPORT"
 
 [node name="ExportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 text = "EXPORT"
 
 [node name="CloseSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 text = "CLOSE"
 
@@ -157,7 +160,7 @@ size_flags_vertical = 3
 [node name="SettingsContent" type="VBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 30
 
 [node name="LabelUrl" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
 layout_mode = 2
@@ -165,6 +168,7 @@ text = "API URL"
 
 [node name="ApiUrlInput" type="LineEdit" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 placeholder_text = "https://api.openai.com/v1"
 
@@ -174,6 +178,7 @@ text = "API Token"
 
 [node name="ApiTokenInput" type="LineEdit" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 secret = true
 
@@ -183,12 +188,13 @@ text = "Model Name"
 
 [node name="ModelInput" type="LineEdit" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 placeholder_text = "gpt-3.5-turbo"
 
 [node name="HSeparator" type="HSeparator" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 40
 
 [node name="PromptsHeader" type="HBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
 layout_mode = 2
@@ -199,13 +205,14 @@ size_flags_horizontal = 3
 text = "Prompts"
 
 [node name="AddPromptButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 text = "ADD PROMPT"
 
 [node name="PromptsContainer" type="VBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 30
 
 [node name="PromptEditor" type="Panel" parent="Background/MarginContainer"]
 unique_name_in_owner = true
@@ -220,7 +227,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 30
 
 [node name="Title" type="Label" parent="Background/MarginContainer/PromptEditor/VBox"]
 layout_mode = 2
@@ -228,6 +235,7 @@ text = "Edit Prompt"
 
 [node name="NameInput" type="LineEdit" parent="Background/MarginContainer/PromptEditor/VBox"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 placeholder_text = "Prompt Name"
 
@@ -240,6 +248,7 @@ wrap_mode = 1
 
 [node name="PromptModelInput" type="LineEdit" parent="Background/MarginContainer/PromptEditor/VBox"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 placeholder_text = "Model (Optional)"
 
@@ -247,11 +256,13 @@ placeholder_text = "Model (Optional)"
 layout_mode = 2
 
 [node name="CancelButton" type="Button" parent="Background/MarginContainer/PromptEditor/VBox/Buttons"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "CANCEL"
 
 [node name="SaveButton" type="Button" parent="Background/MarginContainer/PromptEditor/VBox/Buttons"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "SAVE"
