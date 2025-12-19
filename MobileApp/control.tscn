@@ -136,6 +136,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Settings"
 
+[node name="ImportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
+layout_mode = 2
+text = "IMPORT"
+
+[node name="ExportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
+layout_mode = 2
+text = "EXPORT"
+
 [node name="CloseSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
 layout_mode = 2
 text = "CLOSE"
@@ -247,6 +255,8 @@ size_flags_horizontal = 3
 text = "SAVE"
 
 [connection signal="pressed" from="Background/MarginContainer/MainView/Header/MenuButton" to="." method="_on_menu_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ImportSettingsButton" to="." method="_on_import_settings_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ExportSettingsButton" to="." method="_on_export_settings_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/CloseSettingsButton" to="." method="_on_close_settings_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader/AddPromptButton" to="." method="_on_add_prompt_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/CancelButton" to="." method="_on_prompt_cancel_button_pressed"]

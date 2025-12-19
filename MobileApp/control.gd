@@ -169,6 +169,29 @@ func _on_close_settings_button_pressed():
 	%Settings.visible = false
 	%MainView.visible = true
 
+func _on_import_settings_button_pressed():
+	var clipboard_text = DisplayServer.clipboard_get()
+	if clipboard_text.strip_edges().is_empty():
+		# TODO: Notify user empty clipboard
+		return
+		
+	if Global.import_settings_from_json(clipboard_text):
+		load_ui_from_settings()
+		render_settings_prompts()
+		# TODO: Notify success
+	else:
+		# TODO: Notify failure
+		pass
+
+func _on_export_settings_button_pressed():
+	# Ensure current UI values are saved first (or just use what's in settings if we trust it matches UI)
+	# Saving UI to settings first is safer to capture unsaved edits
+	save_ui_to_settings()
+	
+	var json_str = Global.export_settings_to_json()
+	DisplayServer.clipboard_set(json_str)
+	# TODO: Notify copied
+
 # Settings Prompts Management
 func render_settings_prompts():
 	for child in %PromptsContainer.get_children():
