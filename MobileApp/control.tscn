@@ -246,59 +246,8 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "SAVE"
 
-[node name="ResultView" type="Panel" parent="Background/MarginContainer"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_override_styles/panel = ExtResource("2_62e2m")
-
-[node name="VBox" type="VBoxContainer" parent="Background/MarginContainer/ResultView"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Header" type="HBoxContainer" parent="Background/MarginContainer/ResultView/VBox"]
-layout_mode = 2
-
-[node name="BackResultButton" type="Button" parent="Background/MarginContainer/ResultView/VBox/Header"]
-layout_mode = 2
-text = "BACK"
-
-[node name="Title" type="Label" parent="Background/MarginContainer/ResultView/VBox/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Result"
-horizontal_alignment = 2
-
-[node name="ResultText" type="RichTextLabel" parent="Background/MarginContainer/ResultView/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-focus_mode = 2
-context_menu_enabled = true
-selection_enabled = true
-
-[node name="Buttons" type="HBoxContainer" parent="Background/MarginContainer/ResultView/VBox"]
-layout_mode = 2
-
-[node name="CopyButton" type="Button" parent="Background/MarginContainer/ResultView/VBox/Buttons"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "COPY"
-
-[node name="ShareButton" type="Button" parent="Background/MarginContainer/ResultView/VBox/Buttons"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "SHARE"
-
 [connection signal="pressed" from="Background/MarginContainer/MainView/Header/MenuButton" to="." method="_on_menu_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/CloseSettingsButton" to="." method="_on_close_settings_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader/AddPromptButton" to="." method="_on_add_prompt_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/CancelButton" to="." method="_on_prompt_cancel_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/SaveButton" to="." method="_on_prompt_save_button_pressed"]
-[connection signal="pressed" from="Background/MarginContainer/ResultView/VBox/Header/BackResultButton" to="." method="_on_result_back_button_pressed"]
-[connection signal="pressed" from="Background/MarginContainer/ResultView/VBox/Buttons/CopyButton" to="." method="_on_copy_button_pressed"]
-[connection signal="pressed" from="Background/MarginContainer/ResultView/VBox/Buttons/ShareButton" to="." method="_on_share_button_pressed"]

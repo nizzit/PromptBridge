@@ -137,22 +137,25 @@ func _on_prompt_clicked(index: int):
 		full_msg += "\n\n" + text_to_process
 		
 	var messages = [
-		{ "role": "user", "content": full_msg }
+		{"role": "user", "content": full_msg}
 	]
 	
 	show_loading()
 	llm_client.chat_completions(messages, model, Global.settings.apiUrl, Global.settings.apiToken)
 
 func show_loading():
-	%ResultView.visible = true
-	%ResultText.text = "Loading..."
-	%MainView.visible = false
+	%PromptListScroll.visible = false
+	%ContentText.text = "Processing..."
 
 func _on_llm_response(response_text):
-	%ResultText.text = response_text
+	%ContentPlaceholderMargin.visible = false
+	%PromptListScroll.visible = false
+	%ContentText.text = response_text
 
 func _on_llm_error(error_msg):
-	%ResultText.text = "Error: " + error_msg
+	%ContentPlaceholderMargin.visible = false
+	%PromptListScroll.visible = false
+	%ContentText.text = "Error: " + error_msg
 
 # UI Event Handlers
 func _on_menu_button_pressed():
@@ -198,7 +201,7 @@ func _on_add_prompt_button_pressed():
 func open_prompt_editor(index: int):
 	current_editing_index = index
 	%PromptEditor.visible = true
-	%Settings.visible = false # Hide settings momentarily or keep behind? 
+	%Settings.visible = false # Hide settings momentarily or keep behind?
 	# Stack: Main -> Settings -> PromptEditor. 
 	# Hiding Settings ensures clean focus.
 	
@@ -236,25 +239,6 @@ func _on_prompt_save_button_pressed():
 func delete_prompt(index: int):
 	Global.delete_prompt(index)
 	render_settings_prompts()
-
-# Result View Actions
-func _on_result_back_button_pressed():
-	%ResultView.visible = false
-	%MainView.visible = true
-
-func _on_copy_button_pressed():
-	DisplayServer.clipboard_set(%ResultText.text)
-	# Feedback?
-
-func _on_share_button_pressed():
-	# Use Android intent to share text
-	if OS.get_name() == "Android":
-		# Not strictly implemented in existing extensions, 
-		# but typical godot-android-share plugins exist.
-		# For now, we print or try a basic intent if possible using `JavaClassWrapper`.
-		share_text_android(%ResultText.text)
-	else:
-		print("Sharing: " + %ResultText.text)
 
 func share_text_android(text):
 	if not Engine.has_singleton("AndroidRuntime"):
