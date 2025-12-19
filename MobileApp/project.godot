@@ -18,6 +18,10 @@ boot_splash/fullsize=false
 boot_splash/image="uid://c2lijlp37nsre"
 config/icon="res://icon.svg"
 
+[autoload]
+
+Global="*res://Global.gd"
+
 [display]
 
 window/size/viewport_width=900
