@@ -69,8 +69,15 @@ func process_intent(activity):
 			pending_shared_text = process_text
 			set_content_text(process_text)
 
+func _unhandled_key_input(event):
+	if event.is_pressed() and event.keycode == KEY_V and event.is_ctrl_pressed():
+		var clipboard = DisplayServer.clipboard_get()
+		if not clipboard.strip_edges().is_empty():
+			set_content_text(clipboard)
+
 func set_content_text(text: String):
 	%ContentPlaceholderMargin.visible = false
+	%PromptListScroll.visible = true
 	%ContentText.text = text
 
 func load_ui_from_settings():

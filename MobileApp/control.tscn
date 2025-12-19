@@ -65,25 +65,6 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_0fbet")
 
-[node name="ContentPlaceholderMargin" type="MarginContainer" parent="Background/MarginContainer/MainView/Content"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 50
-theme_override_constants/margin_top = 50
-theme_override_constants/margin_right = 50
-theme_override_constants/margin_bottom = 50
-
-[node name="PlaceholderText" type="RichTextLabel" parent="Background/MarginContainer/MainView/Content/ContentPlaceholderMargin"]
-layout_mode = 2
-theme_override_colors/default_color = Color(0, 0, 0, 0.3137255)
-text = "Share text to this app to start..."
-fit_content = true
-
 [node name="ContentTextMargin" type="MarginContainer" parent="Background/MarginContainer/MainView/Content"]
 layout_mode = 1
 anchors_preset = 15
@@ -101,19 +82,36 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/default_color = Color(0, 0, 0, 1)
 
-[node name="PromptsLabel" type="Label" parent="Background/MarginContainer/MainView"]
+[node name="PromptListScroll" type="ScrollContainer" parent="Background/MarginContainer/MainView/Content/ContentTextMargin"]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
-text = "Select Prompt:"
 
-[node name="PromptListScroll" type="ScrollContainer" parent="Background/MarginContainer/MainView"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="PromptList" type="VBoxContainer" parent="Background/MarginContainer/MainView/PromptListScroll"]
+[node name="PromptList" type="VBoxContainer" parent="Background/MarginContainer/MainView/Content/ContentTextMargin/PromptListScroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 6
 theme_override_constants/separation = 10
+
+[node name="ContentPlaceholderMargin" type="MarginContainer" parent="Background/MarginContainer/MainView/Content"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="PlaceholderText" type="RichTextLabel" parent="Background/MarginContainer/MainView/Content/ContentPlaceholderMargin"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0, 0, 0, 0.3137255)
+text = "Share some text to the app"
+fit_content = true
 
 [node name="Settings" type="Panel" parent="Background/MarginContainer"]
 unique_name_in_owner = true
