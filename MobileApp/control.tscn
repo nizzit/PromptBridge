@@ -1,10 +1,17 @@
-[gd_scene load_steps=7 format=3 uid="uid://dt1vtflb4ddxh"]
+[gd_scene load_steps=20 format=3 uid="uid://dt1vtflb4ddxh"]
 
 [ext_resource type="Script" uid="uid://sovtgq2fyrd2" path="res://control.gd" id="1_0fbet"]
 [ext_resource type="StyleBox" uid="uid://cn8hsvifuohj7" path="res://style/control.tres" id="2_62e2m"]
-[ext_resource type="Theme" path="res://style/main_theme.tres" id="3_theme"]
+[ext_resource type="Theme" uid="uid://b8x6c4y102d3" path="res://style/main_theme.tres" id="3_theme"]
 [ext_resource type="Script" uid="uid://i7thhdyxdtly" path="res://SafeAreaMargin.gd" id="4_safe_area"]
 [ext_resource type="Texture2D" uid="uid://dnc4u7wt8ygl4" path="res://assets/settings.svg" id="5_kbped"]
+[ext_resource type="Script" uid="uid://dbap0gqox0ty1" path="res://addons/markdownlabel/markdownlabel.gd" id="6_eh0v1"]
+[ext_resource type="Script" uid="uid://dcx7crs23nf4" path="res://addons/markdownlabel/header_formats/h1_format.gd" id="7_am1vj"]
+[ext_resource type="Script" uid="uid://d0sin64i4v3op" path="res://addons/markdownlabel/header_formats/h2_format.gd" id="8_g31lc"]
+[ext_resource type="Script" uid="uid://dlok0dv1tq2bf" path="res://addons/markdownlabel/header_formats/h3_format.gd" id="9_knq72"]
+[ext_resource type="Script" uid="uid://bayuh2vafablg" path="res://addons/markdownlabel/header_formats/h4_format.gd" id="10_xvdhi"]
+[ext_resource type="Script" uid="uid://dfr1w7u3jgni3" path="res://addons/markdownlabel/header_formats/h5_format.gd" id="11_oq4si"]
+[ext_resource type="Script" uid="uid://bsi6dexoofpe6" path="res://addons/markdownlabel/header_formats/h6_format.gd" id="12_m4egf"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0fbet"]
 bg_color = Color(1, 1, 1, 1)
@@ -12,6 +19,30 @@ corner_radius_top_left = 40
 corner_radius_top_right = 40
 corner_radius_bottom_right = 40
 corner_radius_bottom_left = 40
+
+[sub_resource type="Resource" id="Resource_eh0v1"]
+resource_local_to_scene = true
+script = ExtResource("7_am1vj")
+
+[sub_resource type="Resource" id="Resource_am1vj"]
+resource_local_to_scene = true
+script = ExtResource("8_g31lc")
+
+[sub_resource type="Resource" id="Resource_g31lc"]
+resource_local_to_scene = true
+script = ExtResource("9_knq72")
+
+[sub_resource type="Resource" id="Resource_knq72"]
+resource_local_to_scene = true
+script = ExtResource("10_xvdhi")
+
+[sub_resource type="Resource" id="Resource_xvdhi"]
+resource_local_to_scene = true
+script = ExtResource("11_oq4si")
+
+[sub_resource type="Resource" id="Resource_oq4si"]
+resource_local_to_scene = true
+script = ExtResource("12_m4egf")
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -83,6 +114,15 @@ theme_override_constants/margin_bottom = 20
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/default_color = Color(0, 0, 0, 1)
+bbcode_enabled = true
+script = ExtResource("6_eh0v1")
+h1 = SubResource("Resource_eh0v1")
+h2 = SubResource("Resource_am1vj")
+h3 = SubResource("Resource_g31lc")
+h4 = SubResource("Resource_knq72")
+h5 = SubResource("Resource_xvdhi")
+h6 = SubResource("Resource_oq4si")
+metadata/_custom_type_script = "uid://dbap0gqox0ty1"
 
 [node name="PromptListScroll" type="ScrollContainer" parent="Background/MarginContainer/MainView/Content/ContentTextMargin"]
 unique_name_in_owner = true
@@ -186,11 +226,11 @@ secret = true
 layout_mode = 2
 text = "Model Name"
 
-[node name="ModelInput" type="LineEdit" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+[node name="ModelInput" type="OptionButton" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-placeholder_text = "gpt-3.5-turbo"
+clip_text = true
 
 [node name="HSeparator" type="HSeparator" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
 layout_mode = 2
@@ -246,11 +286,11 @@ size_flags_vertical = 3
 placeholder_text = "Prompt Text"
 wrap_mode = 1
 
-[node name="PromptModelInput" type="LineEdit" parent="Background/MarginContainer/PromptEditor/VBox"]
+[node name="PromptModelInput" type="OptionButton" parent="Background/MarginContainer/PromptEditor/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-placeholder_text = "Model (Optional)"
+clip_text = true
 
 [node name="Buttons" type="HBoxContainer" parent="Background/MarginContainer/PromptEditor/VBox"]
 layout_mode = 2

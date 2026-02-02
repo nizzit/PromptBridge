@@ -12,6 +12,7 @@ func _ready():
 	add_child(llm_client)
 	llm_client.response_received.connect(_on_llm_response)
 	llm_client.error_occurred.connect(_on_llm_error)
+	llm_client.models_received.connect(_on_models_received)
 	
 	# Load settings into UI
 	load_ui_from_settings()
@@ -83,12 +84,84 @@ func set_content_text(text: String):
 func load_ui_from_settings():
 	%ApiUrlInput.text = Global.settings.apiUrl
 	%ApiTokenInput.text = Global.settings.apiToken
-	%ModelInput.text = Global.settings.modelName
+	
+	# Initialize Model OptionButton with saved model if any
+	%ModelInput.clear()
+	if not Global.settings.modelName.is_empty():
+		%ModelInput.add_item(Global.settings.modelName)
+		%ModelInput.select(0)
+	else:
+		%ModelInput.add_item("Select a model")
+		%ModelInput.set_item_disabled(0, true)
+		
+	# Trigger model fetch
+	refresh_models()
+
+func refresh_models():
+	var api_url = Global.settings.apiUrl
+	var api_token = Global.settings.apiToken
+	
+	if not api_url.is_empty() and not api_token.is_empty():
+		llm_client.fetch_models(api_url, api_token)
+
+func _on_models_received(models: Array):
+	# Update Main Model Dropdown
+	var current_model = Global.settings.modelName
+	if %ModelInput.item_count > 0 and %ModelInput.get_selected_id() != -1:
+		# If user changed it in the meantime, might want to keep? 
+		# But usually we just refresh list.
+		pass
+		
+	populate_model_params(%ModelInput, models, current_model)
+	
+	# Update Prompt Model Dropdown if visible
+	var current_prompt_model = ""
+	if %PromptEditor.visible:
+		# Get currently selected text if any
+		if %PromptModelInput.selected != -1:
+			current_prompt_model = %PromptModelInput.get_item_text(%PromptModelInput.selected)
+			if current_prompt_model == "Default": current_prompt_model = ""
+	
+	populate_model_params(%PromptModelInput, models, current_prompt_model, true)
+
+func populate_model_params(option_button: OptionButton, models: Array, current_selection: String, include_default: bool = false):
+	option_button.clear()
+	
+	if include_default:
+		option_button.add_item("Default") # Value ""
+	
+	# Sort models by id
+	models.sort_custom(func(a, b): return a.id < b.id)
+	
+	var idx_to_select = -1
+	for i in range(models.size()):
+		var m = models[i]
+		option_button.add_item(m.id)
+		if m.id == current_selection:
+			# Account for default item if present
+			idx_to_select = i + (1 if include_default else 0)
+			
+	if idx_to_select != -1:
+		option_button.select(idx_to_select)
+	elif include_default and current_selection.is_empty():
+		option_button.select(0)
+	elif not include_default and not current_selection.is_empty():
+		# Current model not in fresh list, add it?
+		# JS logic: "Restore previously selected model if it exists in the new list"
+		# If it doesn't exist, we might want to add it as a fallback or leave unselected.
+		# Let's add it to ensure it's not lost.
+		option_button.add_item(current_selection)
+		option_button.select(option_button.item_count - 1)
 
 func save_ui_to_settings():
 	Global.settings.apiUrl = %ApiUrlInput.text
 	Global.settings.apiToken = %ApiTokenInput.text
-	Global.settings.modelName = %ModelInput.text
+	
+	if %ModelInput.selected != -1:
+		Global.settings.modelName = %ModelInput.get_item_text(%ModelInput.selected)
+		# Handle "Select a model" placeholder if accidentally selected? 
+		# Should be disabled.
+	
 	Global.save_settings()
 
 func render_prompts_list():
@@ -161,6 +234,8 @@ func _on_llm_error(error_msg):
 func _on_menu_button_pressed():
 	%Settings.visible = true
 	%MainView.visible = false
+	# Refresh models when entering settings if possible
+	refresh_models()
 	render_settings_prompts()
 
 func _on_close_settings_button_pressed():
@@ -230,33 +305,65 @@ func open_prompt_editor(index: int):
 	# Stack: Main -> Settings -> PromptEditor. 
 	# Hiding Settings ensures clean focus.
 	
+	# Prepare model dropdown (PromptModelInput) - should already be populated if fetch happened
+	# But if fetch failed, we might need to populate with stored value
+	
+	var stored_prompt_model = ""
+	var prompt_name = ""
+	var prompt_text = ""
+	
 	if index >= 0:
 		var prompt = Global.settings.prompts[index]
-		%NameInput.text = prompt.name
-		%ContentInput.text = prompt.text
-		%PromptModelInput.text = prompt.get("modelName", "")
+		prompt_name = prompt.name
+		prompt_text = prompt.text
+		stored_prompt_model = prompt.get("modelName", "")
+	
+	%NameInput.text = prompt_name
+	%ContentInput.text = prompt_text
+	
+	# Select correct model in dropdown
+	# If dropdown is empty (no fetch yet), just add this one
+	if %PromptModelInput.item_count == 0:
+		%PromptModelInput.add_item("Default")
+		if not stored_prompt_model.is_empty():
+			%PromptModelInput.add_item(stored_prompt_model)
+			%PromptModelInput.select(1)
+		else:
+			%PromptModelInput.select(0)
 	else:
-		%NameInput.text = ""
-		%ContentInput.text = ""
-		%PromptModelInput.text = ""
+		# Try to find it
+		var found = false
+		for i in range(%PromptModelInput.item_count):
+			var txt = %PromptModelInput.get_item_text(i)
+			if txt == stored_prompt_model or (stored_prompt_model.is_empty() and txt == "Default"):
+				%PromptModelInput.select(i)
+				found = true
+				break
+		if not found and not stored_prompt_model.is_empty():
+			%PromptModelInput.add_item(stored_prompt_model)
+			%PromptModelInput.select(%PromptModelInput.item_count - 1)
 
 func _on_prompt_cancel_button_pressed():
 	%PromptEditor.visible = false
 	%Settings.visible = true
 
 func _on_prompt_save_button_pressed():
-	var name = %NameInput.text
+	var prompt_name = %NameInput.text
 	var text = %ContentInput.text
-	var model = %PromptModelInput.text
 	
-	if name.is_empty() or text.is_empty():
+	var model = ""
+	if %PromptModelInput.selected != -1:
+		model = %PromptModelInput.get_item_text(%PromptModelInput.selected)
+		if model == "Default": model = ""
+	
+	if prompt_name.is_empty() or text.is_empty():
 		print("Name and text required")
 		return
 		
 	if current_editing_index >= 0:
-		Global.update_prompt(current_editing_index, name, text, model)
+		Global.update_prompt(current_editing_index, prompt_name, text, model)
 	else:
-		Global.add_prompt(name, text, model)
+		Global.add_prompt(prompt_name, text, model)
 		
 	_on_prompt_cancel_button_pressed() # Close editor
 	render_settings_prompts() # Refresh list

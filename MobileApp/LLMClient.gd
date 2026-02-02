@@ -2,13 +2,19 @@ extends Node
 
 signal response_received(response_text)
 signal error_occurred(error_message)
+signal models_received(models)
 
 var http_request: HTTPRequest
+var model_http_request: HTTPRequest
 
 func _ready():
 	http_request = HTTPRequest.new()
 	add_child(http_request)
 	http_request.request_completed.connect(_on_request_completed)
+	
+	model_http_request = HTTPRequest.new()
+	add_child(model_http_request)
+	model_http_request.request_completed.connect(_on_model_request_completed)
 
 func chat_completions(messages: Array, model: String, api_url: String, api_token: String):
 	if api_url.is_empty() or api_token.is_empty():
@@ -35,7 +41,33 @@ func chat_completions(messages: Array, model: String, api_url: String, api_token
 	if error != OK:
 		error_occurred.emit("Failed to make HTTP request: " + str(error))
 
-func _on_request_completed(result, response_code, headers, body):
+func fetch_models(api_url: String, api_token: String):
+	if api_url.is_empty() or api_token.is_empty():
+		error_occurred.emit("API URL and Token are required")
+		return
+
+	# Abort any in-progress model request to avoid ERR_BUSY (44) when refreshing quickly
+	if model_http_request.get_http_client_status() != HTTPClient.STATUS_DISCONNECTED:
+		model_http_request.cancel_request()
+
+	var endpoint = api_url
+	if not endpoint.ends_with("/"):
+		endpoint += "/"
+	# JS uses /models/user, let's follow that. 
+	# Wait, check if the base URL already includes 'v1' or similar in JS.
+	# JS: const testUrl = apiUrl.endsWith('/') ? `${apiUrl}models/user` : `${apiUrl}/models/user`;
+	endpoint += "models/user"
+
+	var headers = [
+		"Content-Type: application/json",
+		"Authorization: Bearer " + api_token
+	]
+
+	var error = model_http_request.request(endpoint, headers, HTTPClient.METHOD_GET)
+	if error != OK:
+		error_occurred.emit("Failed to make model request: " + str(error))
+
+func _on_request_completed(result, response_code, _headers, body):
 	if result != HTTPRequest.RESULT_SUCCESS:
 		var error_msg = "Request failed: " + get_result_string(result) + " (Code: " + str(result) + ")"
 		error_occurred.emit(error_msg)
@@ -62,6 +94,30 @@ func _on_request_completed(result, response_code, headers, body):
 		response_received.emit(content)
 	else:
 		error_occurred.emit("Unexpected response format")
+
+func _on_model_request_completed(result, response_code, _headers, body):
+	if result != HTTPRequest.RESULT_SUCCESS:
+		# Fail silently or emit error? 
+		# JS highlights field. We'll emit error.
+		var error_msg = "Model request failed: " + get_result_string(result)
+		error_occurred.emit(error_msg)
+		return
+
+	if response_code >= 400:
+		error_occurred.emit("Model API Error: " + str(response_code))
+		return
+		
+	var json = JSON.new()
+	if json.parse(body.get_string_from_utf8()) != OK:
+		error_occurred.emit("Failed to parse model JSON")
+		return
+		
+	var data = json.data
+	# JS: expects { data: [...] }
+	if data.has("data") and data.data is Array:
+		models_received.emit(data.data)
+	else:
+		error_occurred.emit("Unexpected model response format")
 
 func get_result_string(result_code: int) -> String:
 	match result_code:
