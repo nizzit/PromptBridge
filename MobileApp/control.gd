@@ -11,6 +11,8 @@ func _ready():
 	llm_client = LLMClient.new()
 	add_child(llm_client)
 	llm_client.response_received.connect(_on_llm_response)
+	llm_client.stream_chunk.connect(_on_llm_stream_chunk)
+	llm_client.stream_finished.connect(_on_llm_stream_finished)
 	llm_client.error_occurred.connect(_on_llm_error)
 	llm_client.models_received.connect(_on_models_received)
 	
@@ -218,12 +220,27 @@ func _on_prompt_clicked(index: int):
 
 func show_loading():
 	%PromptListScroll.visible = false
-	%ContentText.text = "Processing..."
+	%ContentPlaceholderMargin.visible = false
+	%ContentText.text = ""
 
-func _on_llm_response(response_text):
+func _on_llm_stream_chunk(chunk_text: String):
+	# Append each streamed token directly to the display label
 	%ContentPlaceholderMargin.visible = false
 	%PromptListScroll.visible = false
-	%ContentText.text = response_text
+	%ContentText.text += chunk_text
+
+func _on_llm_stream_finished():
+	# Streaming complete — nothing extra needed; response_received will fire with full text
+	pass
+
+func _on_llm_response(response_text):
+	# Called after streaming finishes with the full accumulated text.
+	# The text is already displayed via stream_chunk; this is a no-op for streaming,
+	# but kept for compatibility in case streaming is bypassed.
+	%ContentPlaceholderMargin.visible = false
+	%PromptListScroll.visible = false
+	if %ContentText.text.is_empty():
+		%ContentText.text = response_text
 
 func _on_llm_error(error_msg):
 	%ContentPlaceholderMargin.visible = false
