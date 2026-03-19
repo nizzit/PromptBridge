@@ -178,22 +178,18 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Settings"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/Header" unique_id=985076906]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="ImportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer" unique_id=2115373346]
+[node name="ImportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header" unique_id=2115373346]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 text = "IMPORT"
 
-[node name="ExportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer" unique_id=693690247]
+[node name="ExportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header" unique_id=693690247]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "EXPORT"
 
-[node name="CloseSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer" unique_id=214955150]
+[node name="CloseSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header" unique_id=214955150]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -309,9 +305,9 @@ size_flags_horizontal = 3
 text = "SAVE"
 
 [connection signal="pressed" from="Background/MarginContainer/MainView/Header/MenuButton" to="." method="_on_menu_button_pressed"]
-[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer/ImportSettingsButton" to="." method="_on_import_settings_button_pressed"]
-[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer/ExportSettingsButton" to="." method="_on_export_settings_button_pressed"]
-[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer/CloseSettingsButton" to="." method="_on_close_settings_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ImportSettingsButton" to="." method="_on_import_settings_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ExportSettingsButton" to="." method="_on_export_settings_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/CloseSettingsButton" to="." method="_on_close_settings_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader/AddPromptButton" to="." method="_on_add_prompt_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/CancelButton" to="." method="_on_prompt_cancel_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/SaveButton" to="." method="_on_prompt_save_button_pressed"]
