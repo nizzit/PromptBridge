@@ -1,7 +1,7 @@
-[gd_scene load_steps=20 format=3 uid="uid://dt1vtflb4ddxh"]
+[gd_scene format=3 uid="uid://dt1vtflb4ddxh"]
 
 [ext_resource type="Script" uid="uid://sovtgq2fyrd2" path="res://control.gd" id="1_0fbet"]
-[ext_resource type="StyleBox" uid="uid://cn8hsvifuohj7" path="res://style/control.tres" id="2_62e2m"]
+[ext_resource type="Theme" uid="uid://opyj8axqdqky" path="res://style/theme.tres" id="3_eh0v1"]
 [ext_resource type="Theme" uid="uid://b8x6c4y102d3" path="res://style/main_theme.tres" id="3_theme"]
 [ext_resource type="Script" uid="uid://i7thhdyxdtly" path="res://SafeAreaMargin.gd" id="4_safe_area"]
 [ext_resource type="Texture2D" uid="uid://dnc4u7wt8ygl4" path="res://assets/settings.svg" id="5_kbped"]
@@ -44,7 +44,7 @@ script = ExtResource("11_oq4si")
 resource_local_to_scene = true
 script = ExtResource("12_m4egf")
 
-[node name="Main" type="Control"]
+[node name="Main" type="Control" unique_id=656319500]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -54,16 +54,16 @@ grow_vertical = 2
 theme = ExtResource("3_theme")
 script = ExtResource("1_0fbet")
 
-[node name="Background" type="Panel" parent="."]
+[node name="Background" type="Panel" parent="." unique_id=1935580848]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = ExtResource("2_62e2m")
+theme = ExtResource("3_eh0v1")
 
-[node name="MarginContainer" type="MarginContainer" parent="Background"]
+[node name="MarginContainer" type="MarginContainer" parent="Background" unique_id=441324055]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -76,29 +76,30 @@ theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 script = ExtResource("4_safe_area")
 
-[node name="MainView" type="VBoxContainer" parent="Background/MarginContainer"]
+[node name="MainView" type="VBoxContainer" parent="Background/MarginContainer" unique_id=918250708]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="Header" type="HBoxContainer" parent="Background/MarginContainer/MainView"]
+[node name="Header" type="HBoxContainer" parent="Background/MarginContainer/MainView" unique_id=1173049815]
 layout_mode = 2
 size_flags_horizontal = 8
 
-[node name="MenuButton" type="Button" parent="Background/MarginContainer/MainView/Header"]
+[node name="MenuButton" type="Button" parent="Background/MarginContainer/MainView/Header" unique_id=609455444]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-size_flags_horizontal = 8
+size_flags_horizontal = 4
+size_flags_vertical = 4
 icon = ExtResource("5_kbped")
 flat = true
 
-[node name="Content" type="Panel" parent="Background/MarginContainer/MainView"]
+[node name="Content" type="Panel" parent="Background/MarginContainer/MainView" unique_id=904733581]
 custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_0fbet")
 
-[node name="ContentTextMargin" type="MarginContainer" parent="Background/MarginContainer/MainView/Content"]
+[node name="ContentTextMargin" type="MarginContainer" parent="Background/MarginContainer/MainView/Content" unique_id=1045905027]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -110,7 +111,7 @@ theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="ContentText" type="RichTextLabel" parent="Background/MarginContainer/MainView/Content/ContentTextMargin"]
+[node name="ContentText" type="RichTextLabel" parent="Background/MarginContainer/MainView/Content/ContentTextMargin" unique_id=1704090670]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/default_color = Color(0, 0, 0, 1)
@@ -124,19 +125,19 @@ h5 = SubResource("Resource_xvdhi")
 h6 = SubResource("Resource_oq4si")
 metadata/_custom_type_script = "uid://dbap0gqox0ty1"
 
-[node name="PromptListScroll" type="ScrollContainer" parent="Background/MarginContainer/MainView/Content/ContentTextMargin"]
+[node name="PromptListScroll" type="ScrollContainer" parent="Background/MarginContainer/MainView/Content/ContentTextMargin" unique_id=603410053]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="PromptList" type="VBoxContainer" parent="Background/MarginContainer/MainView/Content/ContentTextMargin/PromptListScroll"]
+[node name="PromptList" type="VBoxContainer" parent="Background/MarginContainer/MainView/Content/ContentTextMargin/PromptListScroll" unique_id=355855608]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 6
 theme_override_constants/separation = 30
 
-[node name="ContentPlaceholderMargin" type="MarginContainer" parent="Background/MarginContainer/MainView/Content"]
+[node name="ContentPlaceholderMargin" type="MarginContainer" parent="Background/MarginContainer/MainView/Content" unique_id=1523236879]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -149,19 +150,18 @@ theme_override_constants/margin_top = 50
 theme_override_constants/margin_right = 50
 theme_override_constants/margin_bottom = 50
 
-[node name="PlaceholderText" type="RichTextLabel" parent="Background/MarginContainer/MainView/Content/ContentPlaceholderMargin"]
+[node name="PlaceholderText" type="RichTextLabel" parent="Background/MarginContainer/MainView/Content/ContentPlaceholderMargin" unique_id=555642493]
 layout_mode = 2
 theme_override_colors/default_color = Color(0, 0, 0, 0.3137255)
 text = "Share some text to the app"
 fit_content = true
 
-[node name="Settings" type="Panel" parent="Background/MarginContainer"]
+[node name="Settings" type="Panel" parent="Background/MarginContainer" unique_id=277006586]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_styles/panel = ExtResource("2_62e2m")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Background/MarginContainer/Settings"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Background/MarginContainer/Settings" unique_id=147153406]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -170,97 +170,98 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 30
 
-[node name="Header" type="HBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer"]
+[node name="Header" type="HBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer" unique_id=354095494]
 layout_mode = 2
 
-[node name="Title" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
+[node name="Title" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/Header" unique_id=1285279457]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Settings"
 
-[node name="ImportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/Header" unique_id=985076906]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ImportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer" unique_id=2115373346]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 text = "IMPORT"
 
-[node name="ExportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
+[node name="ExportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer" unique_id=693690247]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "EXPORT"
 
-[node name="CloseSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
+[node name="CloseSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer" unique_id=214955150]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "CLOSE"
 
-[node name="ScrollContainer" type="ScrollContainer" parent="Background/MarginContainer/Settings/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="Background/MarginContainer/Settings/VBoxContainer" unique_id=22227493]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="SettingsContent" type="VBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer"]
+[node name="SettingsContent" type="VBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer" unique_id=1670779159]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 30
 
-[node name="LabelUrl" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+[node name="LabelUrl" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=1029427741]
 layout_mode = 2
 text = "API URL"
 
-[node name="ApiUrlInput" type="LineEdit" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+[node name="ApiUrlInput" type="LineEdit" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=2026052649]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 placeholder_text = "https://api.openai.com/v1"
 
-[node name="LabelToken" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+[node name="LabelToken" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=1863603165]
 layout_mode = 2
 text = "API Token"
 
-[node name="ApiTokenInput" type="LineEdit" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+[node name="ApiTokenInput" type="LineEdit" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=1390331935]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 secret = true
 
-[node name="LabelModel" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+[node name="LabelModel" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=718698608]
 layout_mode = 2
 text = "Model Name"
 
-[node name="ModelInput" type="OptionButton" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+[node name="ModelInput" type="OptionButton" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=1341894116]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 clip_text = true
 
-[node name="HSeparator" type="HSeparator" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
-layout_mode = 2
-theme_override_constants/separation = 40
-
-[node name="PromptsHeader" type="HBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+[node name="PromptsHeader" type="HBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=1424861777]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader"]
+[node name="Label" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader" unique_id=1095074932]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Prompts"
 
-[node name="AddPromptButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader"]
+[node name="AddPromptButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader" unique_id=547367476]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 text = "ADD PROMPT"
 
-[node name="PromptsContainer" type="VBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+[node name="PromptsContainer" type="VBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=1003886691]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 30
 
-[node name="PromptEditor" type="Panel" parent="Background/MarginContainer"]
+[node name="PromptEditor" type="Panel" parent="Background/MarginContainer" unique_id=301196474]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_styles/panel = ExtResource("2_62e2m")
 
-[node name="VBox" type="VBoxContainer" parent="Background/MarginContainer/PromptEditor"]
+[node name="VBox" type="VBoxContainer" parent="Background/MarginContainer/PromptEditor" unique_id=1284188968]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -269,48 +270,48 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 30
 
-[node name="Title" type="Label" parent="Background/MarginContainer/PromptEditor/VBox"]
+[node name="Title" type="Label" parent="Background/MarginContainer/PromptEditor/VBox" unique_id=694623439]
 layout_mode = 2
 text = "Edit Prompt"
 
-[node name="NameInput" type="LineEdit" parent="Background/MarginContainer/PromptEditor/VBox"]
+[node name="NameInput" type="LineEdit" parent="Background/MarginContainer/PromptEditor/VBox" unique_id=642029575]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 placeholder_text = "Prompt Name"
 
-[node name="ContentInput" type="TextEdit" parent="Background/MarginContainer/PromptEditor/VBox"]
+[node name="ContentInput" type="TextEdit" parent="Background/MarginContainer/PromptEditor/VBox" unique_id=994736214]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 placeholder_text = "Prompt Text"
 wrap_mode = 1
 
-[node name="PromptModelInput" type="OptionButton" parent="Background/MarginContainer/PromptEditor/VBox"]
+[node name="PromptModelInput" type="OptionButton" parent="Background/MarginContainer/PromptEditor/VBox" unique_id=1209688800]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 clip_text = true
 
-[node name="Buttons" type="HBoxContainer" parent="Background/MarginContainer/PromptEditor/VBox"]
+[node name="Buttons" type="HBoxContainer" parent="Background/MarginContainer/PromptEditor/VBox" unique_id=45283031]
 layout_mode = 2
 
-[node name="CancelButton" type="Button" parent="Background/MarginContainer/PromptEditor/VBox/Buttons"]
+[node name="CancelButton" type="Button" parent="Background/MarginContainer/PromptEditor/VBox/Buttons" unique_id=612306265]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "CANCEL"
 
-[node name="SaveButton" type="Button" parent="Background/MarginContainer/PromptEditor/VBox/Buttons"]
+[node name="SaveButton" type="Button" parent="Background/MarginContainer/PromptEditor/VBox/Buttons" unique_id=1724624721]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "SAVE"
 
 [connection signal="pressed" from="Background/MarginContainer/MainView/Header/MenuButton" to="." method="_on_menu_button_pressed"]
-[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ImportSettingsButton" to="." method="_on_import_settings_button_pressed"]
-[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ExportSettingsButton" to="." method="_on_export_settings_button_pressed"]
-[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/CloseSettingsButton" to="." method="_on_close_settings_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer/ImportSettingsButton" to="." method="_on_import_settings_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer/ExportSettingsButton" to="." method="_on_export_settings_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/HBoxContainer/CloseSettingsButton" to="." method="_on_close_settings_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader/AddPromptButton" to="." method="_on_add_prompt_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/CancelButton" to="." method="_on_prompt_cancel_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/SaveButton" to="." method="_on_prompt_save_button_pressed"]
