@@ -1,12 +1,12 @@
-[gd_resource type="Theme" load_steps=0 format=3 uid="uid://b8x6c4y102d3"]
+[gd_resource type="Theme" format=3 uid="uid://b8x6c4y102d3"]
 
 [resource]
 default_font_size = 42
 Button/constants/h_separation = 12
 Button/font_sizes/font_size = 42
-Label/font_sizes/font_size = 42
-LineEdit/font_sizes/font_size = 42
-TextEdit/font_sizes/font_size = 42
-RichTextLabel/font_sizes/normal_font_size = 42
 HeaderLarge/base_type = &"Label"
 HeaderLarge/font_sizes/font_size = 64
+Label/font_sizes/font_size = 42
+LineEdit/font_sizes/font_size = 42
+RichTextLabel/font_sizes/normal_font_size = 42
+TextEdit/font_sizes/font_size = 42
