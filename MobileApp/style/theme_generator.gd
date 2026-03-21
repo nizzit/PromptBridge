@@ -11,43 +11,74 @@ extends Node
 
 const ThemeConfigScript = preload("res://style/theme_config.gd")
 
-## The ThemeConfig resource holding all editable parameters.
+@export_group("Light Theme")
+
+## The ThemeConfig resource for the light theme.
 @export var config: Resource:
 	set(value):
 		config = value
 		notify_property_list_changed()
 
-## Path to the output theme file (relative to res://)
+## Path to the output theme file for the light theme.
 @export var theme_output_path: String = "res://style/theme.tres"
 
-## Path to the Panel StyleBox file (control.tres)
+## Path to the Panel StyleBox file used by the light theme (control.tres).
 @export var panel_stylebox_path: String = "res://style/control.tres"
 
-## Trigger generation from the Inspector via this button
-@export_tool_button("Generate Theme", "ThemeDB") var _generate_action = _on_generate_pressed
+## Generate and save the light theme.
+@export_tool_button("Generate Light Theme", "ThemeDB") var _generate_action = _on_generate_pressed
+
+@export_group("Dark Theme")
+
+## The ThemeConfig resource for the dark theme.
+@export var config_dark: Resource:
+	set(value):
+		config_dark = value
+		notify_property_list_changed()
+
+## Path to the output theme file for the dark theme.
+@export var theme_output_path_dark: String = "res://style/theme_dark.tres"
+
+## Path to the Panel StyleBox file used by the dark theme (control_dark.tres).
+@export var panel_stylebox_path_dark: String = "res://style/control_dark.tres"
+
+## Generate and save the dark theme.
+@export_tool_button("Generate Dark Theme", "ThemeDB") var _generate_dark_action = _on_generate_dark_pressed
 
 
 func _on_generate_pressed() -> void:
 	generate_theme()
 
 
-## Generates and saves the theme based on current config values.
+func _on_generate_dark_pressed() -> void:
+	generate_theme_dark()
+
+
+## Generates and saves the light theme.
 func generate_theme() -> void:
-	if config == null:
-		push_error("ThemeGenerator: No ThemeConfig assigned!")
+	_generate(config, theme_output_path, panel_stylebox_path, "light")
+
+
+## Generates and saves the dark theme.
+func generate_theme_dark() -> void:
+	_generate(config_dark, theme_output_path_dark, panel_stylebox_path_dark, "dark")
+
+
+## Internal: builds and saves a theme from the given config.
+func _generate(cfg_res: Resource, out_path: String, panel_sb_path: String, label: String) -> void:
+	if cfg_res == null:
+		push_error("ThemeGenerator: No ThemeConfig assigned for %s theme!" % label)
 		return
 
-	if not (config is ThemeConfigScript):
-		push_error("ThemeGenerator: config must be a ThemeConfig resource!")
+	if not (cfg_res is ThemeConfigScript):
+		push_error("ThemeGenerator: config_%s must be a ThemeConfig resource!" % label)
 		return
 
-	# Use Resource.get() for property access to avoid type-cast issues in @tool context
-	var cfg: Resource = config
+	var cfg: Resource = cfg_res
+	print("ThemeGenerator: Generating %s theme..." % label)
 
-	print("ThemeGenerator: Generating theme...")
-
-	# --- Update Panel StyleBox (control.tres) ---
-	_save_panel_stylebox(cfg)
+	# --- Update Panel StyleBox ---
+	_save_panel_stylebox(cfg, panel_sb_path)
 
 	# --- Build the Theme ---
 	var theme := Theme.new()
@@ -78,12 +109,12 @@ func generate_theme() -> void:
 	theme.set_stylebox("pressed",      "OptionButton", _make_flat(cfg, c_pressed,  true))
 
 	# ── Panel ────────────────────────────────────────────────────────────────
-	# Panel uses an external StyleBox (control.tres) — load it at runtime
-	var panel_sb: StyleBox = load(panel_stylebox_path)
+	# Panel uses an external StyleBox — load it at runtime
+	var panel_sb: StyleBox = load(panel_sb_path)
 	if panel_sb:
 		theme.set_stylebox("panel", "Panel", panel_sb)
 	else:
-		push_warning("ThemeGenerator: Could not load panel stylebox from: " + panel_stylebox_path)
+		push_warning("ThemeGenerator: Could not load panel stylebox from: " + panel_sb_path)
 
 	# ── PopupMenu ────────────────────────────────────────────────────────────
 	theme.set_stylebox("hover", "PopupMenu", _make_flat(cfg, c_primary,   false))
@@ -100,11 +131,11 @@ func generate_theme() -> void:
 	theme.set_stylebox("normal", "RichTextLabel", _make_flat_custom(c_content_bg, content_corner))
 
 	# --- Save ---
-	var err := ResourceSaver.save(theme, theme_output_path)
+	var err := ResourceSaver.save(theme, out_path)
 	if err == OK:
-		print("ThemeGenerator: Theme saved to ", theme_output_path)
+		print("ThemeGenerator: %s theme saved to %s" % [label.capitalize(), out_path])
 	else:
-		push_error("ThemeGenerator: Failed to save theme! Error code: " + str(err))
+		push_error("ThemeGenerator: Failed to save %s theme! Error code: %s" % [label, str(err)])
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -167,11 +198,11 @@ func _make_flat_custom(color: Color, corner: int) -> StyleBoxFlat:
 	return sb
 
 
-## Saves/updates the Panel StyleBox (control.tres) with the highlight color.
-func _save_panel_stylebox(cfg: Resource) -> void:
+## Saves/updates a Panel StyleBox file with the highlight color from config.
+func _save_panel_stylebox(cfg: Resource, sb_path: String) -> void:
 	var sb: StyleBoxFlat
-	if ResourceLoader.exists(panel_stylebox_path):
-		var loaded = load(panel_stylebox_path)
+	if ResourceLoader.exists(sb_path):
+		var loaded = load(sb_path)
 		if loaded is StyleBoxFlat:
 			sb = loaded
 		else:
@@ -181,6 +212,6 @@ func _save_panel_stylebox(cfg: Resource) -> void:
 
 	sb.bg_color = cfg.get("color_highlight")
 
-	var err := ResourceSaver.save(sb, panel_stylebox_path)
+	var err := ResourceSaver.save(sb, sb_path)
 	if err != OK:
-		push_warning("ThemeGenerator: Could not save panel stylebox. Error: " + str(err))
+		push_warning("ThemeGenerator: Could not save panel stylebox to %s. Error: %s" % [sb_path, str(err)])
