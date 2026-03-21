@@ -92,6 +92,13 @@ func generate_theme() -> void:
 	# ── TextEdit ─────────────────────────────────────────────────────────────
 	theme.set_stylebox("normal", "TextEdit", _make_flat_border_all(cfg, c_primary))
 
+	# ── RichTextLabel ────────────────────────────────────────────────────────
+	var c_content_bg:   Color = cfg.get("content_bg_color")
+	var c_content_text: Color = cfg.get("content_text_color")
+	var content_corner: int   = cfg.get("content_panel_corner_radius")
+	theme.set_color("default_color", "RichTextLabel", c_content_text)
+	theme.set_stylebox("normal", "RichTextLabel", _make_flat_custom(c_content_bg, content_corner))
+
 	# --- Save ---
 	var err := ResourceSaver.save(theme, theme_output_path)
 	if err == OK:
@@ -146,6 +153,17 @@ func _make_flat_border_all(cfg: Resource, color: Color) -> StyleBoxFlat:
 	sb.corner_radius_top_right    = cfg.get("corner_radius")
 	sb.corner_radius_bottom_right = cfg.get("corner_radius")
 	sb.corner_radius_bottom_left  = cfg.get("corner_radius")
+	return sb
+
+
+## Creates a StyleBoxFlat with a custom corner radius (no margins, no border).
+func _make_flat_custom(color: Color, corner: int) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = color
+	sb.corner_radius_top_left     = corner
+	sb.corner_radius_top_right    = corner
+	sb.corner_radius_bottom_right = corner
+	sb.corner_radius_bottom_left  = corner
 	return sb
 
 

@@ -101,6 +101,13 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2yy0s"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 40
+corner_radius_top_right = 40
+corner_radius_bottom_right = 40
+corner_radius_bottom_left = 40
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y03ao"]
 bg_color = Color(0.2901961, 0.24705882, 0.72156864, 1)
 border_width_left = 20
 border_width_top = 20
@@ -127,4 +134,6 @@ OptionButton/styles/pressed = SubResource("StyleBoxFlat_e1wkv")
 Panel/styles/panel = ExtResource("1_ikeqk")
 PopupMenu/styles/hover = SubResource("StyleBoxFlat_y72b6")
 PopupMenu/styles/panel = SubResource("StyleBoxFlat_mj357")
-TextEdit/styles/normal = SubResource("StyleBoxFlat_2yy0s")
+RichTextLabel/colors/default_color = Color(0, 0, 0, 1)
+RichTextLabel/styles/normal = SubResource("StyleBoxFlat_2yy0s")
+TextEdit/styles/normal = SubResource("StyleBoxFlat_y03ao")

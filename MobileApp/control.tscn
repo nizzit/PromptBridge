@@ -20,6 +20,8 @@ corner_radius_top_right = 40
 corner_radius_bottom_right = 40
 corner_radius_bottom_left = 40
 
+[sub_resource type="Theme" id="Theme_eh0v1"]
+
 [sub_resource type="Resource" id="Resource_eh0v1"]
 resource_local_to_scene = true
 script = ExtResource("7_am1vj")
@@ -106,6 +108,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = SubResource("Theme_eh0v1")
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
@@ -114,7 +117,6 @@ theme_override_constants/margin_bottom = 20
 [node name="ContentText" type="RichTextLabel" parent="Background/MarginContainer/MainView/Content/ContentTextMargin" unique_id=1704090670]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/default_color = Color(0, 0, 0, 1)
 bbcode_enabled = true
 script = ExtResource("6_eh0v1")
 h1 = SubResource("Resource_eh0v1")
@@ -158,6 +160,7 @@ fit_content = true
 
 [node name="Settings" type="Panel" parent="Background/MarginContainer" unique_id=277006586]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Background/MarginContainer/Settings" unique_id=147153406]

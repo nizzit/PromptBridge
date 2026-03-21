@@ -1,8 +1,11 @@
 [gd_scene format=3 uid="uid://5dt5jqjveqw1"]
 
 [ext_resource type="Script" uid="uid://c62p4g6et8xwf" path="res://style/theme_generator.gd" id="1_gen"]
-[ext_resource type="Resource" uid="uid://dvnj26esb5x4m" path="res://style/theme_config.tres" id="3_cfgres"]
+[ext_resource type="Script" uid="uid://bq0wula52vh8k" path="res://style/theme_config.gd" id="2_cfg"]
+
+[sub_resource type="Resource" id="Resource_kfrvp"]
+script = ExtResource("2_cfg")
 
 [node name="ThemeGenerator" type="Node" unique_id=649243366]
 script = ExtResource("1_gen")
-config = ExtResource("3_cfgres")
+config = SubResource("Resource_kfrvp")

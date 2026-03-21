@@ -30,6 +30,17 @@ extends Resource
 ## Border width used for focus/hover states (LineEdit focus, TextEdit, OptionButton hover)
 @export var border_width: int = 20
 
+@export_group("Content Panel")
+
+## Background color of the content area (white panel with rounded corners)
+@export var content_bg_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+
+## Corner radius of the content panel
+@export var content_panel_corner_radius: int = 40
+
+## Text color for RichTextLabel (ContentText)
+@export var content_text_color: Color = Color(0.0, 0.0, 0.0, 1.0)
+
 @export_group("Spacing")
 
 ## Separation between items in HBoxContainer
