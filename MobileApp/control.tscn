@@ -225,11 +225,13 @@ secret = true
 layout_mode = 2
 text = "Model Name"
 
-[node name="ModelInput" type="OptionButton" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=1341894116]
+[node name="ModelInput" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=1341894116]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 clip_text = true
+text = "Select a model"
+alignment = 0
 
 [node name="LabelTheme" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=-1293967295]
 layout_mode = 2
@@ -294,11 +296,13 @@ size_flags_vertical = 3
 placeholder_text = "Prompt Text"
 wrap_mode = 1
 
-[node name="PromptModelInput" type="OptionButton" parent="Background/MarginContainer/PromptEditor/VBox" unique_id=1209688800]
+[node name="PromptModelInput" type="Button" parent="Background/MarginContainer/PromptEditor/VBox" unique_id=1209688800]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 clip_text = true
+text = "Default"
+alignment = 0
 
 [node name="Buttons" type="HBoxContainer" parent="Background/MarginContainer/PromptEditor/VBox" unique_id=45283031]
 layout_mode = 2
@@ -315,6 +319,8 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "SAVE"
 
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/ModelInput" to="." method="_on_model_input_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/PromptModelInput" to="." method="_on_prompt_model_input_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/MainView/Header/MenuButton" to="." method="_on_menu_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ImportSettingsButton" to="." method="_on_import_settings_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ExportSettingsButton" to="." method="_on_export_settings_button_pressed"]

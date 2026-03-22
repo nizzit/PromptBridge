@@ -10,6 +10,9 @@ const CONTENT_PANEL_DARK  = preload("res://style/content_panel_dark.tres")
 var llm_client: Node
 var current_editing_index: int = -1
 var pending_shared_text: String = ""
+var _all_models: Array = []
+var _model_popup: PopupPanel = null
+var _prompt_model_selected: String = ""  # currently selected model in PromptEditor
 
 func _ready():
 	# Initialize LLM Client
@@ -92,14 +95,11 @@ func load_ui_from_settings():
 	%ApiUrlInput.text = Global.settings.apiUrl
 	%ApiTokenInput.text = Global.settings.apiToken
 	
-	# Initialize Model OptionButton with saved model if any
-	%ModelInput.clear()
+	# Show current model name on the button
 	if not Global.settings.modelName.is_empty():
-		%ModelInput.add_item(Global.settings.modelName)
-		%ModelInput.select(0)
+		%ModelInput.text = Global.settings.modelName
 	else:
-		%ModelInput.add_item("Select a model")
-		%ModelInput.set_item_disabled(0, true)
+		%ModelInput.text = "Select a model"
 
 	# Theme selector
 	var saved_theme = Global.settings.get("theme", "light")
@@ -136,63 +136,196 @@ func refresh_models():
 		llm_client.fetch_models(api_url, api_token)
 
 func _on_models_received(models: Array):
-	# Update Main Model Dropdown
-	var current_model = Global.settings.modelName
-	if %ModelInput.item_count > 0 and %ModelInput.get_selected_id() != -1:
-		# If user changed it in the meantime, might want to keep? 
-		# But usually we just refresh list.
-		pass
-		
-	populate_model_params(%ModelInput, models, current_model)
-	
-	# Update Prompt Model Dropdown if visible
-	var current_prompt_model = ""
-	if %PromptEditor.visible:
-		# Get currently selected text if any
-		if %PromptModelInput.selected != -1:
-			current_prompt_model = %PromptModelInput.get_item_text(%PromptModelInput.selected)
-			if current_prompt_model == "Default": current_prompt_model = ""
-	
-	populate_model_params(%PromptModelInput, models, current_prompt_model, true)
-
-func populate_model_params(option_button: OptionButton, models: Array, current_selection: String, include_default: bool = false):
-	option_button.clear()
-	
-	if include_default:
-		option_button.add_item("Default") # Value ""
-	
-	# Sort models by id
+	# Sort and store all models
 	models.sort_custom(func(a, b): return a.id < b.id)
+	_all_models = models
+
+# ── Model picker popup ────────────────────────────────────────────────────────
+
+func _on_model_input_pressed():
+	_show_model_picker()
+
+func _show_model_picker():
+	# Close any existing popup
+	if _model_popup and is_instance_valid(_model_popup):
+		_model_popup.queue_free()
 	
-	var idx_to_select = -1
-	for i in range(models.size()):
-		var m = models[i]
-		option_button.add_item(m.id)
-		if m.id == current_selection:
-			# Account for default item if present
-			idx_to_select = i + (1 if include_default else 0)
-			
-	if idx_to_select != -1:
-		option_button.select(idx_to_select)
-	elif include_default and current_selection.is_empty():
-		option_button.select(0)
-	elif not include_default and not current_selection.is_empty():
-		# Current model not in fresh list, add it?
-		# JS logic: "Restore previously selected model if it exists in the new list"
-		# If it doesn't exist, we might want to add it as a fallback or leave unselected.
-		# Let's add it to ensure it's not lost.
-		option_button.add_item(current_selection)
-		option_button.select(option_button.item_count - 1)
+	_model_popup = PopupPanel.new()
+	add_child(_model_popup)
+	
+	var root_vbox = VBoxContainer.new()
+	root_vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root_vbox.add_theme_constant_override("separation", 10)
+	_model_popup.add_child(root_vbox)
+	
+	# Filter input
+	var filter_input = LineEdit.new()
+	filter_input.name = "FilterInput"
+	filter_input.placeholder_text = "Filter models..."
+	filter_input.custom_minimum_size = Vector2(0, 80)
+	filter_input.text_changed.connect(_on_model_filter_changed)
+	root_vbox.add_child(filter_input)
+	
+	# Scroll container
+	var scroll = ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root_vbox.add_child(scroll)
+	
+	var list_vbox = VBoxContainer.new()
+	list_vbox.name = "ModelListContainer"
+	list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list_vbox.add_theme_constant_override("separation", 10)
+	scroll.add_child(list_vbox)
+	
+	_populate_model_picker_list(list_vbox, "")
+	
+	# Show popup sized to ~80% of screen
+	var screen_size = get_viewport_rect().size
+	var popup_size = Vector2(screen_size.x * 0.85, screen_size.y * 0.75)
+	_model_popup.popup_centered(popup_size)
+	
+	# Focus filter input for immediate typing
+	filter_input.grab_focus()
+
+func _populate_model_picker_list(container: VBoxContainer, filter: String):
+	for child in container.get_children():
+		child.queue_free()
+	
+	var filter_lower = filter.to_lower()
+	for m in _all_models:
+		if filter.is_empty() or m.id.to_lower().contains(filter_lower):
+			var btn = Button.new()
+			btn.text = m.id
+			btn.custom_minimum_size = Vector2(0, 80)
+			btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			btn.clip_text = true
+			var model_id = m.id
+			btn.pressed.connect(func():
+				Global.settings.modelName = model_id
+				%ModelInput.text = model_id
+				if _model_popup and is_instance_valid(_model_popup):
+					_model_popup.hide()
+			)
+			container.add_child(btn)
+	
+	# If no models loaded yet, show placeholder
+	if _all_models.is_empty():
+		var lbl = Label.new()
+		lbl.text = "No models loaded. Check API settings."
+		container.add_child(lbl)
+
+func _on_model_filter_changed(filter_text: String):
+	if not _model_popup or not is_instance_valid(_model_popup):
+		return
+	# Find ModelListContainer anywhere inside the popup
+	var container = _find_node_by_name(_model_popup, "ModelListContainer")
+	if container:
+		_populate_model_picker_list(container, filter_text)
+
+func _find_node_by_name(parent: Node, node_name: String) -> Node:
+	for child in parent.get_children():
+		if child.name == node_name:
+			return child
+		var found = _find_node_by_name(child, node_name)
+		if found:
+			return found
+	return null
+
+# ── Prompt model picker popup ─────────────────────────────────────────────────
+
+func _on_prompt_model_input_pressed():
+	_show_prompt_model_picker()
+
+func _show_prompt_model_picker():
+	if _model_popup and is_instance_valid(_model_popup):
+		_model_popup.queue_free()
+	
+	_model_popup = PopupPanel.new()
+	add_child(_model_popup)
+	
+	var root_vbox = VBoxContainer.new()
+	root_vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root_vbox.add_theme_constant_override("separation", 10)
+	_model_popup.add_child(root_vbox)
+	
+	# Filter input
+	var filter_input = LineEdit.new()
+	filter_input.name = "FilterInput"
+	filter_input.placeholder_text = "Filter models..."
+	filter_input.custom_minimum_size = Vector2(0, 80)
+	filter_input.text_changed.connect(_on_prompt_model_filter_changed)
+	root_vbox.add_child(filter_input)
+	
+	# Scroll container
+	var scroll = ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root_vbox.add_child(scroll)
+	
+	var list_vbox = VBoxContainer.new()
+	list_vbox.name = "PromptModelListContainer"
+	list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list_vbox.add_theme_constant_override("separation", 10)
+	scroll.add_child(list_vbox)
+	
+	_populate_prompt_model_picker_list(list_vbox, "")
+	
+	var screen_size = get_viewport_rect().size
+	var popup_size = Vector2(screen_size.x * 0.85, screen_size.y * 0.75)
+	_model_popup.popup_centered(popup_size)
+	filter_input.grab_focus()
+
+func _populate_prompt_model_picker_list(container: VBoxContainer, filter: String):
+	for child in container.get_children():
+		child.queue_free()
+	
+	# "Default" option (empty model = use global setting)
+	var default_btn = Button.new()
+	default_btn.text = "Default"
+	default_btn.custom_minimum_size = Vector2(0, 80)
+	default_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	if filter.is_empty() or "default".contains(filter.to_lower()):
+		default_btn.pressed.connect(func():
+			_prompt_model_selected = ""
+			%PromptModelInput.text = "Default"
+			if _model_popup and is_instance_valid(_model_popup):
+				_model_popup.hide()
+		)
+		container.add_child(default_btn)
+	
+	var filter_lower = filter.to_lower()
+	for m in _all_models:
+		if filter.is_empty() or m.id.to_lower().contains(filter_lower):
+			var btn = Button.new()
+			btn.text = m.id
+			btn.custom_minimum_size = Vector2(0, 80)
+			btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			btn.clip_text = true
+			var model_id = m.id
+			btn.pressed.connect(func():
+				_prompt_model_selected = model_id
+				%PromptModelInput.text = model_id
+				if _model_popup and is_instance_valid(_model_popup):
+					_model_popup.hide()
+			)
+			container.add_child(btn)
+	
+	if _all_models.is_empty() and filter.is_empty():
+		var lbl = Label.new()
+		lbl.text = "No models loaded. Check API settings."
+		container.add_child(lbl)
+
+func _on_prompt_model_filter_changed(filter_text: String):
+	if not _model_popup or not is_instance_valid(_model_popup):
+		return
+	var container = _find_node_by_name(_model_popup, "PromptModelListContainer")
+	if container:
+		_populate_prompt_model_picker_list(container, filter_text)
 
 func save_ui_to_settings():
 	Global.settings.apiUrl = %ApiUrlInput.text
 	Global.settings.apiToken = %ApiTokenInput.text
-	
-	if %ModelInput.selected != -1:
-		Global.settings.modelName = %ModelInput.get_item_text(%ModelInput.selected)
-		# Handle "Select a model" placeholder if accidentally selected? 
-		# Should be disabled.
-	
+	# modelName is saved directly when user picks from the popup (_populate_model_picker_list)
+	# so no extra action needed here for ModelInput
 	Global.save_settings()
 
 func render_prompts_list():
@@ -347,12 +480,7 @@ func _on_add_prompt_button_pressed():
 func open_prompt_editor(index: int):
 	current_editing_index = index
 	%PromptEditor.visible = true
-	%Settings.visible = false # Hide settings momentarily or keep behind?
-	# Stack: Main -> Settings -> PromptEditor. 
-	# Hiding Settings ensures clean focus.
-	
-	# Prepare model dropdown (PromptModelInput) - should already be populated if fetch happened
-	# But if fetch failed, we might need to populate with stored value
+	%Settings.visible = false
 	
 	var stored_prompt_model = ""
 	var prompt_name = ""
@@ -367,27 +495,12 @@ func open_prompt_editor(index: int):
 	%NameInput.text = prompt_name
 	%ContentInput.text = prompt_text
 	
-	# Select correct model in dropdown
-	# If dropdown is empty (no fetch yet), just add this one
-	if %PromptModelInput.item_count == 0:
-		%PromptModelInput.add_item("Default")
-		if not stored_prompt_model.is_empty():
-			%PromptModelInput.add_item(stored_prompt_model)
-			%PromptModelInput.select(1)
-		else:
-			%PromptModelInput.select(0)
+	# Set the model button label and internal state
+	_prompt_model_selected = stored_prompt_model
+	if stored_prompt_model.is_empty():
+		%PromptModelInput.text = "Default"
 	else:
-		# Try to find it
-		var found = false
-		for i in range(%PromptModelInput.item_count):
-			var txt = %PromptModelInput.get_item_text(i)
-			if txt == stored_prompt_model or (stored_prompt_model.is_empty() and txt == "Default"):
-				%PromptModelInput.select(i)
-				found = true
-				break
-		if not found and not stored_prompt_model.is_empty():
-			%PromptModelInput.add_item(stored_prompt_model)
-			%PromptModelInput.select(%PromptModelInput.item_count - 1)
+		%PromptModelInput.text = stored_prompt_model
 
 func _on_prompt_cancel_button_pressed():
 	%PromptEditor.visible = false
@@ -396,11 +509,7 @@ func _on_prompt_cancel_button_pressed():
 func _on_prompt_save_button_pressed():
 	var prompt_name = %NameInput.text
 	var text = %ContentInput.text
-	
-	var model = ""
-	if %PromptModelInput.selected != -1:
-		model = %PromptModelInput.get_item_text(%PromptModelInput.selected)
-		if model == "Default": model = ""
+	var model = _prompt_model_selected  # set by _populate_prompt_model_picker_list
 	
 	if prompt_name.is_empty() or text.is_empty():
 		print("Name and text required")
