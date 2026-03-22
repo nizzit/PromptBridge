@@ -4,7 +4,6 @@
 [ext_resource type="Theme" uid="uid://opyj8axqdqky" path="res://style/theme.tres" id="3_eh0v1"]
 [ext_resource type="Theme" uid="uid://b8x6c4y102d3" path="res://style/main_theme.tres" id="3_theme"]
 [ext_resource type="Script" uid="uid://i7thhdyxdtly" path="res://SafeAreaMargin.gd" id="4_safe_area"]
-[ext_resource type="StyleBox" path="res://style/content_panel.tres" id="13_content_panel"]
 [ext_resource type="Texture2D" uid="uid://dnc4u7wt8ygl4" path="res://assets/settings.svg" id="5_kbped"]
 [ext_resource type="Script" uid="uid://dbap0gqox0ty1" path="res://addons/markdownlabel/markdownlabel.gd" id="6_eh0v1"]
 [ext_resource type="Script" uid="uid://dcx7crs23nf4" path="res://addons/markdownlabel/header_formats/h1_format.gd" id="7_am1vj"]
@@ -13,6 +12,7 @@
 [ext_resource type="Script" uid="uid://bayuh2vafablg" path="res://addons/markdownlabel/header_formats/h4_format.gd" id="10_xvdhi"]
 [ext_resource type="Script" uid="uid://dfr1w7u3jgni3" path="res://addons/markdownlabel/header_formats/h5_format.gd" id="11_oq4si"]
 [ext_resource type="Script" uid="uid://bsi6dexoofpe6" path="res://addons/markdownlabel/header_formats/h6_format.gd" id="12_m4egf"]
+[ext_resource type="StyleBox" uid="uid://lhrblkqjycfn" path="res://style/content_panel.tres" id="13_content_panel"]
 
 [sub_resource type="Theme" id="Theme_eh0v1"]
 
@@ -183,13 +183,11 @@ text = "IMPORT"
 [node name="ExportSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header" unique_id=693690247]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-size_flags_horizontal = 3
 text = "EXPORT"
 
 [node name="CloseSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header" unique_id=214955150]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-size_flags_horizontal = 3
 text = "CLOSE"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Background/MarginContainer/Settings/VBoxContainer" unique_id=22227493]
@@ -229,9 +227,9 @@ text = "Model Name"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-clip_text = true
 text = "Select a model"
 alignment = 0
+clip_text = true
 
 [node name="LabelTheme" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=-1293967295]
 layout_mode = 2
@@ -300,9 +298,9 @@ wrap_mode = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-clip_text = true
 text = "Default"
 alignment = 0
+clip_text = true
 
 [node name="Buttons" type="HBoxContainer" parent="Background/MarginContainer/PromptEditor/VBox" unique_id=45283031]
 layout_mode = 2
@@ -319,13 +317,13 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "SAVE"
 
-[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/ModelInput" to="." method="_on_model_input_pressed"]
-[connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/PromptModelInput" to="." method="_on_prompt_model_input_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/MainView/Header/MenuButton" to="." method="_on_menu_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ImportSettingsButton" to="." method="_on_import_settings_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ExportSettingsButton" to="." method="_on_export_settings_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/CloseSettingsButton" to="." method="_on_close_settings_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/ModelInput" to="." method="_on_model_input_pressed"]
 [connection signal="item_selected" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/ThemeInput" to="." method="_on_theme_input_item_selected"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader/AddPromptButton" to="." method="_on_add_prompt_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/PromptModelInput" to="." method="_on_prompt_model_input_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/CancelButton" to="." method="_on_prompt_cancel_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/SaveButton" to="." method="_on_prompt_save_button_pressed"]
