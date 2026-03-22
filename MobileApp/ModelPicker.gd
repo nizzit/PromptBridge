@@ -2,6 +2,9 @@ extends PopupPanel
 
 signal model_selected(model_id: String)
 
+const THEME_LIGHT = preload("res://style/theme.tres")
+const THEME_DARK  = preload("res://style/theme_dark.tres")
+
 @onready var filter_input: LineEdit = $VBoxContainer/FilterInput
 @onready var model_list_container: VBoxContainer = $VBoxContainer/ScrollContainer/ModelListContainer
 
@@ -14,9 +17,12 @@ func _ready():
 	# Focus filter input when popup is shown
 	popup_hide.connect(_on_popup_hide)
 
-func show_picker(models: Array, show_default: bool = false, screen_size: Vector2 = Vector2.ZERO) -> void:
+func show_picker(models: Array, show_default: bool = false, screen_size: Vector2 = Vector2.ZERO, theme_name: String = "light") -> void:
 	_models = models
 	_show_default_option = show_default
+	
+	# Apply theme
+	apply_theme(theme_name)
 	
 	_populate_list("")
 	
@@ -28,6 +34,12 @@ func show_picker(models: Array, show_default: bool = false, screen_size: Vector2
 	
 	# Focus filter input for immediate typing
 	filter_input.grab_focus()
+
+func apply_theme(theme_name: String) -> void:
+	if theme_name == "dark":
+		theme = THEME_DARK
+	else:
+		theme = THEME_LIGHT
 
 func _populate_list(filter: String) -> void:
 	# Clear existing children

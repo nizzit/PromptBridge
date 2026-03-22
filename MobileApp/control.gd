@@ -151,10 +151,11 @@ func _show_model_picker(show_default_option: bool = false):
 	if _model_popup and is_instance_valid(_model_popup):
 		_model_popup.queue_free()
 	
+	var current_theme = Global.settings.get("theme", "light")
 	_model_popup = ModelPicker.instantiate()
 	add_child(_model_popup)
 	_model_popup.model_selected.connect(_on_model_selected.bind(show_default_option))
-	_model_popup.show_picker(_all_models, show_default_option, get_viewport_rect().size)
+	_model_popup.show_picker(_all_models, show_default_option, get_viewport_rect().size, current_theme)
 
 func _on_model_selected(model_id: String, is_prompt_model: bool) -> void:
 	if is_prompt_model:
