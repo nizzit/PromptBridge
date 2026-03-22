@@ -1,18 +1,12 @@
-[gd_resource type="Resource" script_class="ThemeConfig" format=3 uid="uid://theme_config_dark_001"]
+[gd_resource type="Resource" script_class="ThemeConfig" format=3 uid="uid://cob5sx4k2wn2n"]
 
-[ext_resource type="Script" path="res://style/theme_config.gd" id="1_config"]
+[ext_resource type="Script" uid="uid://bq0wula52vh8k" path="res://style/theme_config.gd" id="1_config"]
 
 [resource]
 script = ExtResource("1_config")
-color_primary = Color(0.12156863, 0.11372549, 0.2, 1)
-color_hover = Color(0.17254902, 0.16078431, 0.28235294, 1)
-color_pressed = Color(0.07843137, 0.07058824, 0.13333334, 1)
+color_primary = Color(0.15991965, 0.15046042, 0.2549683, 1)
+color_hover = Color(0.2400659, 0.22523725, 0.38058338, 1)
+color_pressed = Color(0.35015643, 0.32916018, 0.50369626, 1)
 color_highlight = Color(0.09803922, 0.09019608, 0.16862746, 1)
-corner_radius = 10
-content_margin_horizontal = 20.0
-border_width = 20
-content_bg_color = Color(0.09803922, 0.09019608, 0.16862746, 1)
-content_panel_corner_radius = 40
+content_bg_color = Color(0.057671763, 0.051867098, 0.109772705, 1)
 content_text_color = Color(0.9, 0.9, 0.9, 1)
-hbox_separation = 20
-option_button_arrow_margin = 20

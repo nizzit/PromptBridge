@@ -17,7 +17,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 config/name="PromptBridge"
 run/main_scene="uid://dt1vtflb4ddxh"
 config/features=PackedStringArray("4.6", "Mobile")
-boot_splash/bg_color=Color(0.11764706, 0.101960786, 0.20784314, 1)
+boot_splash/bg_color=Color(0.09803922, 0.09019608, 0.16862746, 1)
 boot_splash/show_image=false
 config/icon="res://icon.svg"
 

@@ -2,6 +2,11 @@ extends Control
 
 const LLMClient = preload("res://LLMClient.gd")
 
+const THEME_LIGHT = preload("res://style/theme.tres")
+const THEME_DARK  = preload("res://style/theme_dark.tres")
+const CONTENT_PANEL_LIGHT = preload("res://style/content_panel.tres")
+const CONTENT_PANEL_DARK  = preload("res://style/content_panel_dark.tres")
+
 var llm_client: Node
 var current_editing_index: int = -1
 var pending_shared_text: String = ""
@@ -95,9 +100,33 @@ func load_ui_from_settings():
 	else:
 		%ModelInput.add_item("Select a model")
 		%ModelInput.set_item_disabled(0, true)
-		
+
+	# Theme selector
+	var saved_theme = Global.settings.get("theme", "light")
+	%ThemeInput.select(0 if saved_theme == "light" else 1)
+	apply_theme(saved_theme)
+
 	# Trigger model fetch
 	refresh_models()
+
+
+## Applies the named theme ("light" or "dark") to the Background panel and Content panel.
+func apply_theme(theme_name: String) -> void:
+	var background := $Background as Panel
+	var content := %Content as Panel
+	if theme_name == "dark":
+		background.theme = THEME_DARK
+		content.add_theme_stylebox_override("panel", CONTENT_PANEL_DARK)
+	else:
+		background.theme = THEME_LIGHT
+		content.add_theme_stylebox_override("panel", CONTENT_PANEL_LIGHT)
+
+
+func _on_theme_input_item_selected(index: int) -> void:
+	var theme_name = "light" if index == 0 else "dark"
+	Global.settings["theme"] = theme_name
+	Global.save_settings()
+	apply_theme(theme_name)
 
 func refresh_models():
 	var api_url = Global.settings.apiUrl

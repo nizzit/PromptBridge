@@ -4,6 +4,7 @@
 [ext_resource type="Theme" uid="uid://opyj8axqdqky" path="res://style/theme.tres" id="3_eh0v1"]
 [ext_resource type="Theme" uid="uid://b8x6c4y102d3" path="res://style/main_theme.tres" id="3_theme"]
 [ext_resource type="Script" uid="uid://i7thhdyxdtly" path="res://SafeAreaMargin.gd" id="4_safe_area"]
+[ext_resource type="StyleBox" path="res://style/content_panel.tres" id="13_content_panel"]
 [ext_resource type="Texture2D" uid="uid://dnc4u7wt8ygl4" path="res://assets/settings.svg" id="5_kbped"]
 [ext_resource type="Script" uid="uid://dbap0gqox0ty1" path="res://addons/markdownlabel/markdownlabel.gd" id="6_eh0v1"]
 [ext_resource type="Script" uid="uid://dcx7crs23nf4" path="res://addons/markdownlabel/header_formats/h1_format.gd" id="7_am1vj"]
@@ -12,13 +13,6 @@
 [ext_resource type="Script" uid="uid://bayuh2vafablg" path="res://addons/markdownlabel/header_formats/h4_format.gd" id="10_xvdhi"]
 [ext_resource type="Script" uid="uid://dfr1w7u3jgni3" path="res://addons/markdownlabel/header_formats/h5_format.gd" id="11_oq4si"]
 [ext_resource type="Script" uid="uid://bsi6dexoofpe6" path="res://addons/markdownlabel/header_formats/h6_format.gd" id="12_m4egf"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0fbet"]
-bg_color = Color(1, 1, 1, 1)
-corner_radius_top_left = 40
-corner_radius_top_right = 40
-corner_radius_bottom_right = 40
-corner_radius_bottom_left = 40
 
 [sub_resource type="Theme" id="Theme_eh0v1"]
 
@@ -96,10 +90,11 @@ icon = ExtResource("5_kbped")
 flat = true
 
 [node name="Content" type="Panel" parent="Background/MarginContainer/MainView" unique_id=904733581]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_0fbet")
+theme_override_styles/panel = ExtResource("13_content_panel")
 
 [node name="ContentTextMargin" type="MarginContainer" parent="Background/MarginContainer/MainView/Content" unique_id=1045905027]
 layout_mode = 1
@@ -236,6 +231,20 @@ custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 clip_text = true
 
+[node name="LabelTheme" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=-1293967295]
+layout_mode = 2
+text = "Theme"
+
+[node name="ThemeInput" type="OptionButton" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=-1293967294]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+item_count = 2
+popup/item_0/text = "Light"
+popup/item_0/id = 0
+popup/item_1/text = "Dark"
+popup/item_1/id = 1
+
 [node name="PromptsHeader" type="HBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent" unique_id=1424861777]
 layout_mode = 2
 
@@ -310,6 +319,7 @@ text = "SAVE"
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ImportSettingsButton" to="." method="_on_import_settings_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/ExportSettingsButton" to="." method="_on_export_settings_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/CloseSettingsButton" to="." method="_on_close_settings_button_pressed"]
+[connection signal="item_selected" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/ThemeInput" to="." method="_on_theme_input_item_selected"]
 [connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader/AddPromptButton" to="." method="_on_add_prompt_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/CancelButton" to="." method="_on_prompt_cancel_button_pressed"]
 [connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/SaveButton" to="." method="_on_prompt_save_button_pressed"]

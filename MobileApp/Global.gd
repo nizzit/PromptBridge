@@ -5,7 +5,8 @@ var settings = {
 	"apiUrl": "https://api.openai.com/v1",
 	"apiToken": "",
 	"modelName": "gpt-3.5-turbo",
-	"prompts": []
+	"prompts": [],
+	"theme": "light"
 }
 
 func _ready():
