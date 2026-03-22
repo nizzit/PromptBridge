@@ -1,6 +1,7 @@
 extends Control
 
 const LLMClient = preload("res://LLMClient.gd")
+const ModelPicker = preload("res://ModelPicker.tscn")
 
 const THEME_LIGHT = preload("res://style/theme.tres")
 const THEME_DARK  = preload("res://style/theme_dark.tres")
@@ -143,183 +144,28 @@ func _on_models_received(models: Array):
 # ── Model picker popup ────────────────────────────────────────────────────────
 
 func _on_model_input_pressed():
-	_show_model_picker()
+	_show_model_picker(false)
 
-func _show_model_picker():
+func _show_model_picker(show_default_option: bool = false):
 	# Close any existing popup
 	if _model_popup and is_instance_valid(_model_popup):
 		_model_popup.queue_free()
 	
-	_model_popup = PopupPanel.new()
+	_model_popup = ModelPicker.instantiate()
 	add_child(_model_popup)
-	
-	var root_vbox = VBoxContainer.new()
-	root_vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root_vbox.add_theme_constant_override("separation", 10)
-	_model_popup.add_child(root_vbox)
-	
-	# Filter input
-	var filter_input = LineEdit.new()
-	filter_input.name = "FilterInput"
-	filter_input.placeholder_text = "Filter models..."
-	filter_input.custom_minimum_size = Vector2(0, 80)
-	filter_input.text_changed.connect(_on_model_filter_changed)
-	root_vbox.add_child(filter_input)
-	
-	# Scroll container
-	var scroll = ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root_vbox.add_child(scroll)
-	
-	var list_vbox = VBoxContainer.new()
-	list_vbox.name = "ModelListContainer"
-	list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list_vbox.add_theme_constant_override("separation", 10)
-	scroll.add_child(list_vbox)
-	
-	_populate_model_picker_list(list_vbox, "")
-	
-	# Show popup sized to ~80% of screen
-	var screen_size = get_viewport_rect().size
-	var popup_size = Vector2(screen_size.x * 0.85, screen_size.y * 0.75)
-	_model_popup.popup_centered(popup_size)
-	
-	# Focus filter input for immediate typing
-	filter_input.grab_focus()
+	_model_popup.model_selected.connect(_on_model_selected.bind(show_default_option))
+	_model_popup.show_picker(_all_models, show_default_option, get_viewport_rect().size)
 
-func _populate_model_picker_list(container: VBoxContainer, filter: String):
-	for child in container.get_children():
-		child.queue_free()
-	
-	var filter_lower = filter.to_lower()
-	for m in _all_models:
-		if filter.is_empty() or m.id.to_lower().contains(filter_lower):
-			var btn = Button.new()
-			btn.text = m.id
-			btn.custom_minimum_size = Vector2(0, 80)
-			btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			btn.clip_text = true
-			var model_id = m.id
-			btn.pressed.connect(func():
-				Global.settings.modelName = model_id
-				%ModelInput.text = model_id
-				if _model_popup and is_instance_valid(_model_popup):
-					_model_popup.hide()
-			)
-			container.add_child(btn)
-	
-	# If no models loaded yet, show placeholder
-	if _all_models.is_empty():
-		var lbl = Label.new()
-		lbl.text = "No models loaded. Check API settings."
-		container.add_child(lbl)
-
-func _on_model_filter_changed(filter_text: String):
-	if not _model_popup or not is_instance_valid(_model_popup):
-		return
-	# Find ModelListContainer anywhere inside the popup
-	var container = _find_node_by_name(_model_popup, "ModelListContainer")
-	if container:
-		_populate_model_picker_list(container, filter_text)
-
-func _find_node_by_name(parent: Node, node_name: String) -> Node:
-	for child in parent.get_children():
-		if child.name == node_name:
-			return child
-		var found = _find_node_by_name(child, node_name)
-		if found:
-			return found
-	return null
-
-# ── Prompt model picker popup ─────────────────────────────────────────────────
+func _on_model_selected(model_id: String, is_prompt_model: bool) -> void:
+	if is_prompt_model:
+		_prompt_model_selected = model_id
+		%PromptModelInput.text = model_id if not model_id.is_empty() else "Default"
+	else:
+		Global.settings.modelName = model_id
+		%ModelInput.text = model_id
 
 func _on_prompt_model_input_pressed():
-	_show_prompt_model_picker()
-
-func _show_prompt_model_picker():
-	if _model_popup and is_instance_valid(_model_popup):
-		_model_popup.queue_free()
-	
-	_model_popup = PopupPanel.new()
-	add_child(_model_popup)
-	
-	var root_vbox = VBoxContainer.new()
-	root_vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root_vbox.add_theme_constant_override("separation", 10)
-	_model_popup.add_child(root_vbox)
-	
-	# Filter input
-	var filter_input = LineEdit.new()
-	filter_input.name = "FilterInput"
-	filter_input.placeholder_text = "Filter models..."
-	filter_input.custom_minimum_size = Vector2(0, 80)
-	filter_input.text_changed.connect(_on_prompt_model_filter_changed)
-	root_vbox.add_child(filter_input)
-	
-	# Scroll container
-	var scroll = ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root_vbox.add_child(scroll)
-	
-	var list_vbox = VBoxContainer.new()
-	list_vbox.name = "PromptModelListContainer"
-	list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list_vbox.add_theme_constant_override("separation", 10)
-	scroll.add_child(list_vbox)
-	
-	_populate_prompt_model_picker_list(list_vbox, "")
-	
-	var screen_size = get_viewport_rect().size
-	var popup_size = Vector2(screen_size.x * 0.85, screen_size.y * 0.75)
-	_model_popup.popup_centered(popup_size)
-	filter_input.grab_focus()
-
-func _populate_prompt_model_picker_list(container: VBoxContainer, filter: String):
-	for child in container.get_children():
-		child.queue_free()
-	
-	# "Default" option (empty model = use global setting)
-	var default_btn = Button.new()
-	default_btn.text = "Default"
-	default_btn.custom_minimum_size = Vector2(0, 80)
-	default_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	if filter.is_empty() or "default".contains(filter.to_lower()):
-		default_btn.pressed.connect(func():
-			_prompt_model_selected = ""
-			%PromptModelInput.text = "Default"
-			if _model_popup and is_instance_valid(_model_popup):
-				_model_popup.hide()
-		)
-		container.add_child(default_btn)
-	
-	var filter_lower = filter.to_lower()
-	for m in _all_models:
-		if filter.is_empty() or m.id.to_lower().contains(filter_lower):
-			var btn = Button.new()
-			btn.text = m.id
-			btn.custom_minimum_size = Vector2(0, 80)
-			btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			btn.clip_text = true
-			var model_id = m.id
-			btn.pressed.connect(func():
-				_prompt_model_selected = model_id
-				%PromptModelInput.text = model_id
-				if _model_popup and is_instance_valid(_model_popup):
-					_model_popup.hide()
-			)
-			container.add_child(btn)
-	
-	if _all_models.is_empty() and filter.is_empty():
-		var lbl = Label.new()
-		lbl.text = "No models loaded. Check API settings."
-		container.add_child(lbl)
-
-func _on_prompt_model_filter_changed(filter_text: String):
-	if not _model_popup or not is_instance_valid(_model_popup):
-		return
-	var container = _find_node_by_name(_model_popup, "PromptModelListContainer")
-	if container:
-		_populate_prompt_model_picker_list(container, filter_text)
+	_show_model_picker(true)
 
 func save_ui_to_settings():
 	Global.settings.apiUrl = %ApiUrlInput.text
