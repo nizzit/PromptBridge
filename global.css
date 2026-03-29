@@ -237,26 +237,24 @@ article {
     position: relative;
 }
 
-/* Container for buttons in article */
-article button {
+/* Container for action buttons in prompt card */
+.prompt-buttons {
     position: absolute;
     top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
     opacity: 0;
     transition: opacity 0.2s;
 }
 
-/* First button (Edit) */
-article button:first-of-type {
-    right: 85px;
-}
-
-/* Second button (Delete) */
-article button:nth-of-type(2) {
-    right: 10px;
-}
-
 /* Show buttons on hover over article */
-article:hover button {
+article:hover .prompt-buttons {
+    opacity: 1;
+}
+
+/* Always show buttons in edit/add form */
+.edit-form .prompt-buttons {
     opacity: 1;
 }
 
@@ -548,18 +546,6 @@ select.align-right {
     margin-bottom: 0px;
 }
 
-.edit-form .button-with-status {
-    margin-top: 16px;
-    justify-content: flex-end;
-}
-
-.edit-form button {
-    margin-left: 8px;
-}
-
-.edit-form button:first-child {
-    margin-left: 0;
-}
 
 /* Delete button confirmation state */
 .delete-button[data-confirm-state="true"] {
