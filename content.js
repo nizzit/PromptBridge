@@ -17,16 +17,7 @@ let lastMenuInteractionTime = 0; // Timestamp of last menu interaction to preven
 const activeStreams = new Map();
 let streamIdCounter = 0;
 
-// Prefetch cache: stores results for prompts with prefetch enabled
-// Key: prompt name, Value: { status: 'loading'|'ready'|'error', result: data, selectedText: text }
-let prefetchCache = {};
-let currentMenuSelectedText = ''; // Track text for current menu session
 let minSelectionLength = 3; // Default value, will be updated from settings
-
-// Utility: generate stable cache key for prefetch
-function getPrefetchCacheKey(promptName, selectedText) {
-    return promptName + "|" + selectedText;
-}
 
 // Utility function to get storage API
 function getStorage() {
@@ -122,37 +113,6 @@ function callAPIStreaming(apiUrl, apiToken, modelName, fullPrompt, onChunk) {
 
 // Function to handle prompt selection and API call
 async function handlePromptSelection(prompt, selectedText, storage, button, originalText) {
-    // Try to find cache immediately by prompt+selectedText key
-    const prefetchCacheKey = getPrefetchCacheKey(prompt.name, selectedText);
-    const matchingCache = prefetchCache[prefetchCacheKey];
-
-    if (prompt.prefetch && matchingCache && matchingCache.selectedText === selectedText) {
-        if (matchingCache.status === 'ready') {
-            // Show cached result immediately
-            isProcessing = false;
-            removeSelectionMenu();
-            removeLoadingIndicator();
-            createResultOverlay(matchingCache.result);
-            return;
-        } else if (matchingCache.status === 'loading') {
-            // Subscribe to prefetch completion and wait
-            matchingCache.callbacks.push((status, result) => {
-                isProcessing = false;
-                removeSelectionMenu();
-                removeLoadingIndicator();
-                createResultOverlay(result);
-            });
-            return;
-        } else if (matchingCache.status === 'error') {
-            // Show error from prefetch
-            isProcessing = false;
-            removeSelectionMenu();
-            removeLoadingIndicator();
-            createResultOverlay(matchingCache.result);
-            return;
-        }
-    }
-
     const result = await storage.sync.get(['apiUrl', 'apiToken', 'modelName']);
 
     // Use prompt-specific model if available, otherwise use global model
@@ -258,146 +218,29 @@ function removeElementWithFadeOut(element, callback = null) {
 }
 
 
-// Function to start prefetch for a prompt
-async function startPrefetch(prompt, selectedText, storage) {
-    const cacheKey = getPrefetchCacheKey(prompt.name, selectedText);
-
-    // Don't start prefetch again for loading/ready states
-    if (prefetchCache[cacheKey] && (prefetchCache[cacheKey].status === 'loading' || prefetchCache[cacheKey].status === 'ready')) {
-        // Debug
-        console.log('PREFETCH: already running or finished for', cacheKey);
-        return;
-    }
-    // Mark as loading
-    prefetchCache[cacheKey] = {
-        status: 'loading',
-        result: null,
-        selectedText: selectedText,
-        callbacks: [] // Array of callbacks to call when ready
-    };
-
-    const result = await storage.sync.get(['apiUrl', 'apiToken', 'modelName']);
-
-    // Use prompt-specific model if available, otherwise use global model
-    const modelName = prompt.modelName || result.modelName;
-
-    if (!result.apiUrl || !result.apiToken || !modelName) {
-        prefetchCache[cacheKey] = {
-            status: 'error',
-            result: 'API settings not configured',
-            selectedText: selectedText,
-            callbacks: []
-        };
-        // Call any waiting callbacks
-        executePrefetchCallbacks(cacheKey);
-        return;
-    }
-
-    const fullPrompt = prompt.text + '\n\n' + selectedText;
-    let accumulatedText = '';
-
-    callAPIStreaming(
-        result.apiUrl,
-        result.apiToken,
-        modelName,
-        fullPrompt,
-        (chunk) => {
-            // Only accumulate if this is still the same selection session
-            if (prefetchCache[cacheKey]?.selectedText === selectedText) {
-                accumulatedText += chunk;
-            }
-        }
-    ).then(() => {
-        if (prefetchCache[cacheKey]?.selectedText === selectedText) {
-            prefetchCache[cacheKey] = {
-                status: 'ready',
-                result: accumulatedText,
-                selectedText: selectedText,
-                callbacks: prefetchCache[cacheKey].callbacks
-            };
-            executePrefetchCallbacks(cacheKey);
-        }
-    }).catch((error) => {
-        if (prefetchCache[cacheKey]?.selectedText === selectedText) {
-            prefetchCache[cacheKey] = {
-                status: 'error',
-                result: `Error accessing API: ${error.message}`,
-                selectedText: selectedText,
-                callbacks: prefetchCache[cacheKey].callbacks
-            };
-            executePrefetchCallbacks(cacheKey);
-        }
-    });
-}
-
-// Function to execute callbacks waiting for prefetch result
-function executePrefetchCallbacks(cacheKey) {
-    const cached = prefetchCache[cacheKey];
-    if (!cached || !cached.callbacks) return;
-
-    // Execute all callbacks
-    cached.callbacks.forEach(callback => {
-        try {
-            callback(cached.status, cached.result);
-        } catch (error) {
-            console.error('Error executing prefetch callback:', error);
-        }
-    });
-
-    // Clear callbacks after execution
-    cached.callbacks = [];
-}
-
 // Function to toggle prompt buttons visibility
-function togglePromptButtons(shouldStartPrefetch = false) {
+function togglePromptButtons() {
     if (!selectionMenu) return;
 
     const promptButtons = selectionMenu.querySelectorAll('.pb-prompt-button');
     const isVisible = promptButtons[0]?.style.display !== 'none';
 
     if (isVisible) {
-        // Hide with animation
         promptButtons.forEach(button => {
             button.style.animation = 'pb-fadeOutButton 0.2s ease-out forwards';
         });
-
         setTimeout(() => {
             promptButtons.forEach(button => {
                 button.style.display = 'none';
-                button.style.animation = ''; // Reset animation
+                button.style.animation = '';
             });
         }, 200);
     } else {
-        // Show with animation
         promptButtons.forEach(button => {
             button.style.display = 'block';
             button.style.animation = 'pb-fadeInButton 0.2s ease-out forwards';
         });
-
-        // Start prefetch if requested (for on-menu timing)
-        if (shouldStartPrefetch) {
-            startPrefetchForVisiblePrompts();
-        }
     }
-}
-
-// Function to start prefetch for all prompts with prefetch enabled
-function startPrefetchForVisiblePrompts() {
-    if (!selectionMenu) return;
-
-    const selectedText = currentMenuSelectedText;
-    if (!selectedText) return;
-
-    const storage = getStorage();
-    storage.sync.get(['prompts'], function (result) {
-        const prompts = result.prompts || [];
-        prompts.forEach((prompt) => {
-            if (prompt.prefetch) {
-                // Prevent starting prefetch for the same prompt + selectedText
-                startPrefetch(prompt, selectedText, storage);
-            }
-        });
-    });
 }
 
 // Function to calculate menu position based on user preference
@@ -505,13 +348,9 @@ function createSelectionMenu(x, y, targetElement) {
         return; // Don't create menu if no selection
     }
 
-    // Clear prefetch cache for new session (remove only old values, keep cache of other selections if needed)
-    prefetchCache = {};
-    currentMenuSelectedText = selectedText;
-
     // Get menu position preference and create menu
     const storage = getStorage();
-    storage.sync.get(['prompts', 'menuPosition', 'openOnHover', 'prefetchTiming', 'enableInInputs', 'minSelectionLength', 'enableFloatingButton'], function (result) {
+    storage.sync.get(['prompts', 'menuPosition', 'openOnHover', 'enableInInputs', 'minSelectionLength', 'enableFloatingButton'], function (result) {
         // Update global min selection length
         if (result.minSelectionLength !== undefined) {
             minSelectionLength = result.minSelectionLength;
@@ -543,7 +382,6 @@ function createSelectionMenu(x, y, targetElement) {
         const prompts = result.prompts || [];
         const menuPosition = result.menuPosition || 'middle-center';
         const openOnHover = result.openOnHover || false;
-        const prefetchTiming = result.prefetchTiming || 'on-button';
 
         // Calculate position based on preference
         const position = calculateMenuPosition(x, y, menuPosition);
@@ -561,9 +399,7 @@ function createSelectionMenu(x, y, targetElement) {
             // Mark interaction time
             lastMenuInteractionTime = Date.now();
 
-            // Start prefetch on menu open if timing is set to on-menu
-            const shouldStartPrefetch = (prefetchTiming === 'on-menu');
-            togglePromptButtons(shouldStartPrefetch);
+            togglePromptButtons();
         });
 
         // Add hover handlers if enabled
@@ -578,10 +414,6 @@ function createSelectionMenu(x, y, targetElement) {
                     button.style.animation = 'pb-fadeInButton 0.2s ease-out forwards';
                 });
 
-                // Start prefetch on menu open if timing is set to on-menu
-                if (prefetchTiming === 'on-menu') {
-                    startPrefetchForVisiblePrompts();
-                }
             });
 
             selectionMenu.addEventListener('mouseleave', function (event) {
@@ -633,11 +465,6 @@ function createSelectionMenu(x, y, targetElement) {
             prompts.forEach((prompt) => {
                 const button = createPromptButton(prompt, storage);
                 selectionMenu.appendChild(button);
-
-                // Start prefetch for prompts that have it enabled and timing is on-button
-                if (prompt.prefetch && prefetchTiming === 'on-button') {
-                    startPrefetch(prompt, selectedText, storage);
-                }
             });
         }
 
@@ -656,9 +483,6 @@ function removeSelectionMenu() {
         // Only reset global state if the global selectionMenu is still the one we removed
         if (selectionMenu === menuToRemove) {
             selectionMenu = null;
-            // Clear prefetch cache when menu is removed
-            prefetchCache = {};
-            currentMenuSelectedText = '';
         }
     });
 }
@@ -1112,7 +936,7 @@ document.addEventListener('mouseup', function (event) {
 
                 // Reset interaction time if this is a new selection (different text or no menu exists)
                 const existingMenu = document.querySelector('.pb-prompt-menu');
-                if (!existingMenu || !existingMenu.parentNode || currentMenuSelectedText !== selectedText) {
+                if (!existingMenu || !existingMenu.parentNode) {
                     // This is a new selection, allow menu creation
                     lastMenuInteractionTime = 0;
                 }
@@ -1148,7 +972,7 @@ document.addEventListener('mouseup', function (event) {
 
         // Reset interaction time if this is a new selection (different text or no menu exists)
         const existingMenu = document.querySelector('.pb-prompt-menu');
-        if (!existingMenu || !existingMenu.parentNode || currentMenuSelectedText !== selectedText) {
+        if (!existingMenu || !existingMenu.parentNode) {
             // This is a new selection, allow menu creation
             lastMenuInteractionTime = 0;
         }

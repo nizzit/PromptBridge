@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Load settings function
 function loadSettings() {
     const storage = getStorage();
-    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'prefetchTiming', 'resultWidth', 'resultHeight', 'enableMarkdown', 'enableInInputs', 'minSelectionLength', 'enableFloatingButton', 'enableFloatingButtonInResult'], function (result) {
+    storage.sync.get(['apiUrl', 'apiToken', 'modelName', 'menuPosition', 'openOnHover', 'resultWidth', 'resultHeight', 'enableMarkdown', 'enableInInputs', 'minSelectionLength', 'enableFloatingButton', 'enableFloatingButtonInResult'], function (result) {
         if (result.apiUrl) {
             document.getElementById('api-url').value = result.apiUrl;
         }
@@ -104,14 +104,6 @@ function loadSettings() {
         // Load open on hover setting (default to false)
         const openOnHover = result.openOnHover || false;
         document.getElementById('open-on-hover').checked = openOnHover;
-
-        // Load prefetch timing setting (default to on-button)
-        const prefetchTiming = result.prefetchTiming || 'on-button';
-        const timingRadioButtons = document.querySelectorAll('input[name="prefetch-timing"]');
-        const timingRadioButton = Array.from(timingRadioButtons).find(rb => rb.value === prefetchTiming);
-        if (timingRadioButton) {
-            timingRadioButton.checked = true;
-        }
 
         // Load result window size settings
         const resultWidth = result.resultWidth || DEFAULT_RESULT_WIDTH;
@@ -204,7 +196,6 @@ function saveSettings() {
     const modelName = document.getElementById('model-name').value;
     const menuPosition = document.querySelector('input[name="menu-position"]:checked')?.value || 'middle-center';
     const openOnHover = document.getElementById('open-on-hover').checked;
-    const prefetchTiming = document.querySelector('input[name="prefetch-timing"]:checked')?.value || 'on-button';
     const enableInInputs = document.getElementById('enable-in-inputs').checked;
     const enableMarkdown = document.getElementById('enable-markdown').checked;
     const enableFloatingButton = document.getElementById('enable-floating-button').checked;
@@ -270,7 +261,6 @@ function saveSettings() {
         modelName: modelName,
         menuPosition: menuPosition,
         openOnHover: openOnHover,
-        prefetchTiming: prefetchTiming,
         resultWidth: resultWidth,
         resultHeight: resultHeight,
         enableInInputs: enableInInputs,
@@ -433,13 +423,6 @@ function displayPromptCard(container, prompt, index) {
         headerDiv.appendChild(fullPageBadge);
     }
 
-    if (prompt.prefetch) {
-        const prefetchBadge = document.createElement('span');
-        prefetchBadge.className = 'badge';
-        prefetchBadge.textContent = 'Prefetch';
-        headerDiv.appendChild(prefetchBadge);
-    }
-
     if (prompt.modelName) {
         const modelBadge = document.createElement('span');
         modelBadge.className = 'badge';
@@ -547,24 +530,6 @@ function displayEditForm(container, prompt, index) {
     fullPageRow.appendChild(fullPageLabel);
     fullPageRow.appendChild(fullPageInput);
     editArticle.appendChild(fullPageRow);
-
-    // Prefetch option
-    const prefetchRow = document.createElement('div');
-    prefetchRow.className = 'form-row';
-
-    const prefetchLabel = document.createElement('label');
-    prefetchLabel.textContent = 'Prefetch prompt result';
-    prefetchLabel.htmlFor = `edit-prefetch-${index}`;
-
-    const prefetchInput = document.createElement('input');
-    prefetchInput.type = 'checkbox';
-    prefetchInput.id = `edit-prefetch-${index}`;
-    prefetchInput.checked = prompt.prefetch || false;
-    prefetchInput.className = 'align-right';
-
-    prefetchRow.appendChild(prefetchLabel);
-    prefetchRow.appendChild(prefetchInput);
-    editArticle.appendChild(prefetchRow);
 
     // Model selection row
     const modelRow = document.createElement('div');
@@ -700,24 +665,6 @@ function displayAddForm(container) {
     fullPageRow.appendChild(fullPageLabel);
     fullPageRow.appendChild(fullPageInput);
     addArticle.appendChild(fullPageRow);
-
-    // Prefetch option
-    const prefetchRow = document.createElement('div');
-    prefetchRow.className = 'form-row';
-
-    const prefetchLabel = document.createElement('label');
-    prefetchLabel.textContent = 'Prefetch prompt result';
-    prefetchLabel.htmlFor = 'add-prefetch';
-
-    const prefetchInput = document.createElement('input');
-    prefetchInput.type = 'checkbox';
-    prefetchInput.id = 'add-prefetch';
-    prefetchInput.checked = false;
-    prefetchInput.className = 'align-right';
-
-    prefetchRow.appendChild(prefetchLabel);
-    prefetchRow.appendChild(prefetchInput);
-    addArticle.appendChild(prefetchRow);
 
     // Model selection row
     const modelRow = document.createElement('div');
@@ -907,13 +854,11 @@ function saveNewPrompt() {
     const nameInput = document.getElementById('add-name');
     const textInput = document.getElementById('add-text');
     const fullPageInput = document.getElementById('add-fullpage');
-    const prefetchInput = document.getElementById('add-prefetch');
     const modelSelect = document.getElementById('add-model');
 
     const promptName = nameInput.value.trim();
     const promptText = textInput.value.trim();
     const useFullPage = fullPageInput.checked;
-    const prefetch = prefetchInput.checked;
     const modelName = modelSelect.value; // Can be empty string for global model
 
     if (!promptName || !promptText) {
@@ -930,8 +875,7 @@ function saveNewPrompt() {
         const newPrompt = {
             name: promptName,
             text: promptText,
-            useFullPage: useFullPage,
-            prefetch: prefetch
+            useFullPage: useFullPage
         };
 
         // Only add modelName if it's not empty
@@ -965,13 +909,11 @@ function saveEditedPrompt(index) {
     const nameInput = document.getElementById(`edit-name-${index}`);
     const textInput = document.getElementById(`edit-text-${index}`);
     const fullPageInput = document.getElementById(`edit-fullpage-${index}`);
-    const prefetchInput = document.getElementById(`edit-prefetch-${index}`);
     const modelSelect = document.getElementById(`edit-model-${index}`);
 
     const promptName = nameInput.value.trim();
     const promptText = textInput.value.trim();
     const useFullPage = fullPageInput.checked;
-    const prefetch = prefetchInput.checked;
     const modelName = modelSelect.value; // Can be empty string for global model
 
     if (!promptName || !promptText) {
@@ -988,8 +930,7 @@ function saveEditedPrompt(index) {
         const updatedPrompt = {
             name: promptName,
             text: promptText,
-            useFullPage: useFullPage,
-            prefetch: prefetch
+            useFullPage: useFullPage
         };
 
         // Only add modelName if it's not empty
@@ -1022,7 +963,6 @@ function exportSettings() {
         'modelName',
         'menuPosition',
         'openOnHover',
-        'prefetchTiming',
         'resultWidth',
         'resultHeight',
         'enableInInputs',
