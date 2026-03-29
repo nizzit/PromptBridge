@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0] - 2026-03-29
+
+### Added
+- Streaming responses via Server-Sent Events — result appears token by token as it is generated
+
+### Removed
+- Prefetch mode for prompts and related settings
+
 ## [1.1.0] - 2025-12-08
 
 ### Added
