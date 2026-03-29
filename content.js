@@ -13,6 +13,10 @@ let isProcessing = false; // Request processing flag
 let menuCreationId = 0; // Counter to track menu creation attempts and invalidate old ones
 let lastMenuInteractionTime = 0; // Timestamp of last menu interaction to prevent duplicate creation
 
+// Streaming state: map of streamId -> { resolve, reject, onChunk }
+const activeStreams = new Map();
+let streamIdCounter = 0;
+
 // Prefetch cache: stores results for prompts with prefetch enabled
 // Key: prompt name, Value: { status: 'loading'|'ready'|'error', result: data, selectedText: text }
 let prefetchCache = {};
@@ -90,6 +94,32 @@ function createPromptButton(prompt, storage) {
     return button;
 }
 
+// Helper: send a streaming API call and return a Promise that resolves when done.
+// onChunk(delta: string) is called for each received token.
+function callAPIStreaming(apiUrl, apiToken, modelName, fullPrompt, onChunk) {
+    return new Promise((resolve, reject) => {
+        const streamId = ++streamIdCounter;
+        activeStreams.set(streamId, { resolve, reject, onChunk });
+
+        chrome.runtime.sendMessage({
+            action: 'callAPI',
+            apiUrl,
+            apiToken,
+            modelName,
+            fullPrompt,
+            streamId
+        }, (response) => {
+            if (chrome.runtime.lastError || (response && !response.success)) {
+                activeStreams.delete(streamId);
+                reject(new Error(
+                    chrome.runtime.lastError?.message || response?.error || 'Unknown error'
+                ));
+            }
+            // Streaming continues via onMessage listeners
+        });
+    });
+}
+
 // Function to handle prompt selection and API call
 async function handlePromptSelection(prompt, selectedText, storage, button, originalText) {
     // Try to find cache immediately by prompt+selectedText key
@@ -110,10 +140,8 @@ async function handlePromptSelection(prompt, selectedText, storage, button, orig
                 isProcessing = false;
                 removeSelectionMenu();
                 removeLoadingIndicator();
-                // Show the result
                 createResultOverlay(result);
             });
-            // Keep spinner and processing state - will be handled by callback
             return;
         } else if (matchingCache.status === 'error') {
             // Show error from prefetch
@@ -132,53 +160,57 @@ async function handlePromptSelection(prompt, selectedText, storage, button, orig
 
     if (!result.apiUrl || !result.apiToken || !modelName) {
         alert('Error: API settings are not configured. Please configure the extension.');
-        // Restore button
         button.textContent = originalText;
-        // Remove loading indicator if shown
         removeLoadingIndicator();
         isProcessing = false;
         return;
     }
 
-    try {
-        const fullPrompt = prompt.text + '\n\n' + selectedText;
+    const fullPrompt = prompt.text + '\n\n' + selectedText;
+    let accumulatedText = '';
+    let overlayCreated = false;
 
-        // Call API through background script to bypass CSP
-        chrome.runtime.sendMessage({
-            action: 'callAPI',
-            apiUrl: result.apiUrl,
-            apiToken: result.apiToken,
-            modelName: modelName,
-            fullPrompt: fullPrompt
-        }, (response) => {
-            // Remove menu after receiving response
+    try {
+        await callAPIStreaming(
+            result.apiUrl,
+            result.apiToken,
+            modelName,
+            fullPrompt,
+            (chunk) => {
+                accumulatedText += chunk;
+                if (!overlayCreated) {
+                    // First chunk — hide spinner, open overlay
+                    overlayCreated = true;
+                    isProcessing = false;
+                    removeSelectionMenu();
+                    removeLoadingIndicator();
+                    createResultOverlay(accumulatedText);
+                } else {
+                    updateResultOverlayContent(accumulatedText);
+                }
+            }
+        );
+        // Stream done — final resize now that all content is in
+        if (overlayCreated) {
+            updateResultOverlayContent(accumulatedText, true);
+        } else {
+            // No chunks at all
             isProcessing = false;
             removeSelectionMenu();
-            // Remove loading indicator
             removeLoadingIndicator();
-
-            if (response.success) {
-                const data = response.data;
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    const resultText = data.choices[0].message.content;
-                    createResultOverlay(resultText);
-                } else {
-                    createResultOverlay('Error: unexpected response format from API');
-                }
-            } else {
-                createResultOverlay(`Error accessing API: ${response.error}`);
-                console.error('API Error:', response.error);
-            }
-        });
-
+            createResultOverlay('');
+        }
     } catch (error) {
-        // Remove menu on error too
+        const errorMsg = `Error accessing API: ${error.message}`;
         isProcessing = false;
         removeSelectionMenu();
-        // Remove loading indicator
         removeLoadingIndicator();
-        createResultOverlay(`Error: ${error.message}`);
-        console.error('Error:', error);
+        if (overlayCreated) {
+            updateResultOverlayContent(accumulatedText + '\n\n' + errorMsg, true);
+        } else {
+            createResultOverlay(errorMsg);
+        }
+        console.error('API Streaming Error:', error);
     }
 }
 // Utility function to create a positioned container
@@ -261,62 +293,41 @@ async function startPrefetch(prompt, selectedText, storage) {
         return;
     }
 
-    try {
-        const fullPrompt = prompt.text + '\n\n' + selectedText;
+    const fullPrompt = prompt.text + '\n\n' + selectedText;
+    let accumulatedText = '';
 
-        // Call API through background script
-        chrome.runtime.sendMessage({
-            action: 'callAPI',
-            apiUrl: result.apiUrl,
-            apiToken: result.apiToken,
-            modelName: modelName,
-            fullPrompt: fullPrompt
-        }, (response) => {
-            // Only update cache if this is still the same selection session
+    callAPIStreaming(
+        result.apiUrl,
+        result.apiToken,
+        modelName,
+        fullPrompt,
+        (chunk) => {
+            // Only accumulate if this is still the same selection session
             if (prefetchCache[cacheKey]?.selectedText === selectedText) {
-                if (response.success) {
-                    const data = response.data;
-                    if (data.choices && data.choices[0] && data.choices[0].message) {
-                        prefetchCache[cacheKey] = {
-                            status: 'ready',
-                            result: data.choices[0].message.content,
-                            selectedText: selectedText,
-                            callbacks: prefetchCache[cacheKey].callbacks
-                        };
-
-                        // Execute any waiting callbacks
-                        executePrefetchCallbacks(cacheKey);
-                    } else {
-                        prefetchCache[cacheKey] = {
-                            status: 'error',
-                            result: 'Unexpected response format from API',
-                            selectedText: selectedText,
-                            callbacks: prefetchCache[cacheKey].callbacks
-                        };
-                        executePrefetchCallbacks(cacheKey);
-                    }
-                } else {
-                    prefetchCache[cacheKey] = {
-                        status: 'error',
-                        result: `Error accessing API: ${response.error}`,
-                        selectedText: selectedText,
-                        callbacks: prefetchCache[cacheKey].callbacks
-                    };
-                    executePrefetchCallbacks(cacheKey);
-                }
+                accumulatedText += chunk;
             }
-        });
-    } catch (error) {
+        }
+    ).then(() => {
         if (prefetchCache[cacheKey]?.selectedText === selectedText) {
             prefetchCache[cacheKey] = {
-                status: 'error',
-                result: `Error: ${error.message}`,
+                status: 'ready',
+                result: accumulatedText,
                 selectedText: selectedText,
                 callbacks: prefetchCache[cacheKey].callbacks
             };
             executePrefetchCallbacks(cacheKey);
         }
-    }
+    }).catch((error) => {
+        if (prefetchCache[cacheKey]?.selectedText === selectedText) {
+            prefetchCache[cacheKey] = {
+                status: 'error',
+                result: `Error accessing API: ${error.message}`,
+                selectedText: selectedText,
+                callbacks: prefetchCache[cacheKey].callbacks
+            };
+            executePrefetchCallbacks(cacheKey);
+        }
+    });
 }
 
 // Function to execute callbacks waiting for prefetch result
@@ -928,6 +939,11 @@ function createResultOverlay(text) {
         const enableMarkdown = result.enableMarkdown !== undefined ? result.enableMarkdown : true;
 
         const overlayContainer = createOverlayContainer(resultWidth);
+        // Store settings on the overlay element for later updates
+        overlayContainer._enableMarkdown = enableMarkdown;
+        overlayContainer._resultWidth = resultWidth;
+        overlayContainer._resultHeight = resultHeight;
+
         const header = createOverlayHeader();
         const content = createOverlayContent(text, enableMarkdown);
         addDragFunctionality(header);
@@ -939,6 +955,79 @@ function createResultOverlay(text) {
             adjustOverlayPosition();
         });
     });
+}
+
+// Function to update result overlay content during streaming
+function updateResultOverlayContent(text, finalResize = false) {
+    if (!resultOverlay) return;
+
+    const enableMarkdown = resultOverlay._enableMarkdown !== undefined
+        ? resultOverlay._enableMarkdown
+        : true;
+    const resultWidth = resultOverlay._resultWidth;
+    const resultHeight = resultOverlay._resultHeight;
+
+    // Replace content element
+    const oldContent = resultOverlay.querySelector('.pb-overlay-content');
+    const newContent = createOverlayContent(text, enableMarkdown);
+
+    if (oldContent) {
+        resultOverlay.replaceChild(newContent, oldContent);
+    } else {
+        resultOverlay.appendChild(newContent);
+    }
+
+    // Grow the overlay if content overflows, but never shrink during streaming
+    requestAnimationFrame(() => {
+        expandOverlayIfNeeded(resultWidth, resultHeight);
+        // On final chunk also do a full recalculation to shrink if content is shorter
+        if (finalResize) {
+            setOptimalOverlaySize(resultWidth, resultHeight);
+            adjustOverlayPosition();
+        }
+    });
+}
+
+// Expand overlay only if content overflows — never shrink mid-stream
+function expandOverlayIfNeeded(maxWidth, maxHeight) {
+    if (!resultOverlay) return;
+
+    const content = resultOverlay.querySelector('.pb-overlay-content');
+    if (!content) return;
+
+    const header = resultOverlay.querySelector('.pb-overlay-header');
+    const headerHeight = header ? header.offsetHeight : 0;
+    const padding = 16;
+
+    // Measure natural (unconstrained) width — same trick as setOptimalOverlaySize
+    const savedWidth = resultOverlay.style.width;
+    const savedMaxWidth = resultOverlay.style.maxWidth;
+    resultOverlay.style.width = 'auto';
+    resultOverlay.style.maxWidth = `${maxWidth}px`;
+    const naturalWidth = Math.min(content.scrollWidth + padding + 20, maxWidth);
+    // Restore before making any decisions
+    resultOverlay.style.width = savedWidth;
+    resultOverlay.style.maxWidth = savedMaxWidth;
+
+    let changed = false;
+
+    if (naturalWidth > resultOverlay.offsetWidth) {
+        resultOverlay.style.width = `${naturalWidth}px`;
+        changed = true;
+    }
+
+    // Vertical: scrollHeight vs clientHeight works correctly
+    if (content.scrollHeight > content.clientHeight) {
+        const needed = Math.min(content.scrollHeight + headerHeight + padding, maxHeight);
+        if (needed > resultOverlay.offsetHeight) {
+            resultOverlay.style.height = `${needed}px`;
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        adjustOverlayPosition();
+    }
 }
 
 // Function to create loading indicator for context menu requests
@@ -1113,8 +1202,37 @@ document.addEventListener('contextmenu', function (event) {
 
 
 
-// Listen for messages from background script (context menu)
+// Listen for messages from background script (streaming + context menu)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    // --- Streaming events from background ---
+    if (request.action === 'streamStart') {
+        const stream = activeStreams.get(request.streamId);
+        if (stream) stream.onStart?.();
+        return;
+    }
+    if (request.action === 'streamChunk') {
+        const stream = activeStreams.get(request.streamId);
+        if (stream) stream.onChunk(request.chunk);
+        return;
+    }
+    if (request.action === 'streamEnd') {
+        const stream = activeStreams.get(request.streamId);
+        if (stream) {
+            stream.resolve();
+            activeStreams.delete(request.streamId);
+        }
+        return;
+    }
+    if (request.action === 'streamError') {
+        const stream = activeStreams.get(request.streamId);
+        if (stream) {
+            stream.reject(new Error(request.error));
+            activeStreams.delete(request.streamId);
+        }
+        return;
+    }
+
+    // --- Context menu prompt execution ---
     if (request.action === 'executePrompt') {
         // Show loading indicator immediately
         createLoadingIndicator();

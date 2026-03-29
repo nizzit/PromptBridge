@@ -107,14 +107,15 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     }
 });
 
-// Function to call API from background script (bypasses CSP)
-async function callAPI(apiUrl, apiToken, modelName, fullPrompt) {
-    try {
-        const apiEndpoint = apiUrl.endsWith('/')
-            ? `${apiUrl}chat/completions`
-            : `${apiUrl}/chat/completions`;
+// Function to call API with streaming from background script (bypasses CSP)
+async function callAPIStreaming(apiUrl, apiToken, modelName, fullPrompt, tabId, streamId) {
+    const apiEndpoint = apiUrl.endsWith('/')
+        ? `${apiUrl}chat/completions`
+        : `${apiUrl}/chat/completions`;
 
-        const response = await fetch(apiEndpoint, {
+    let response;
+    try {
+        response = await fetch(apiEndpoint, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiToken}`,
@@ -122,6 +123,7 @@ async function callAPI(apiUrl, apiToken, modelName, fullPrompt) {
             },
             body: JSON.stringify({
                 model: modelName,
+                stream: true,
                 messages: [
                     {
                         role: 'user',
@@ -131,16 +133,76 @@ async function callAPI(apiUrl, apiToken, modelName, fullPrompt) {
             }),
             referrerPolicy: 'no-referrer'
         });
-
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        return { success: true, data };
     } catch (error) {
-        return { success: false, error: error.message };
+        chrome.tabs.sendMessage(tabId, {
+            action: 'streamError',
+            streamId,
+            error: error.message
+        });
+        return;
     }
+
+    if (!response.ok) {
+        chrome.tabs.sendMessage(tabId, {
+            action: 'streamError',
+            streamId,
+            error: `API error: ${response.status} ${response.statusText}`
+        });
+        return;
+    }
+
+    // Notify content script that streaming has started
+    chrome.tabs.sendMessage(tabId, { action: 'streamStart', streamId });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+
+            // Process complete SSE lines from buffer
+            let newlineIdx;
+            while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+                const line = buffer.slice(0, newlineIdx).trim();
+                buffer = buffer.slice(newlineIdx + 1);
+
+                if (!line.startsWith('data:')) continue;
+
+                const data = line.slice(5).trim();
+                if (data === '[DONE]') break;
+
+                let parsed;
+                try {
+                    parsed = JSON.parse(data);
+                } catch {
+                    continue;
+                }
+
+                const delta = parsed?.choices?.[0]?.delta?.content;
+                if (delta != null) {
+                    chrome.tabs.sendMessage(tabId, {
+                        action: 'streamChunk',
+                        streamId,
+                        chunk: delta
+                    });
+                }
+            }
+        }
+    } catch (error) {
+        chrome.tabs.sendMessage(tabId, {
+            action: 'streamError',
+            streamId,
+            error: error.message
+        });
+        return;
+    }
+
+    chrome.tabs.sendMessage(tabId, { action: 'streamEnd', streamId });
 }
 
 // Listen for messages from content scripts
@@ -148,14 +210,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'openOptions') {
         chrome.runtime.openOptionsPage();
     } else if (request.action === 'callAPI') {
-        // Handle API call request from content script
-        callAPI(request.apiUrl, request.apiToken, request.modelName, request.fullPrompt)
-            .then(result => {
-                sendResponse(result);
-            })
-            .catch(error => {
-                sendResponse({ success: false, error: error.message });
-            });
-        return true; // Keep message channel open for async response
+        // Handle streaming API call request from content script
+        const tabId = sender.tab?.id;
+        if (!tabId) {
+            sendResponse({ success: false, error: 'No tab ID available' });
+            return;
+        }
+        // Acknowledge immediately so content script doesn't wait
+        sendResponse({ success: true, streaming: true });
+
+        callAPIStreaming(
+            request.apiUrl,
+            request.apiToken,
+            request.modelName,
+            request.fullPrompt,
+            tabId,
+            request.streamId
+        );
+        return true; // Keep channel open for sendResponse
     }
 });
