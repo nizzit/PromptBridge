@@ -443,12 +443,15 @@ function displayPromptCard(container, prompt, index) {
     textPara.textContent = prompt.text;
     promptArticle.appendChild(textPara);
 
+    const promptButtons = document.createElement('div');
+    promptButtons.className = 'prompt-buttons';
+
     const editButton = document.createElement('button');
     editButton.textContent = 'Edit';
     editButton.addEventListener('click', function () {
         editPrompt(index);
     });
-    promptArticle.appendChild(editButton);
+    promptButtons.appendChild(editButton);
 
     const deleteButton = document.createElement('button');
     deleteButton.textContent = 'Delete';
@@ -459,7 +462,9 @@ function displayPromptCard(container, prompt, index) {
     deleteButton.addEventListener('mouseleave', function () {
         resetDeleteButton(this);
     });
-    promptArticle.appendChild(deleteButton);
+    promptButtons.appendChild(deleteButton);
+
+    promptArticle.appendChild(promptButtons);
 
     container.appendChild(promptArticle);
 }
@@ -575,7 +580,7 @@ function displayEditForm(container, prompt, index) {
 
     // Buttons container
     const buttonsContainer = document.createElement('div');
-    buttonsContainer.className = 'button-with-status';
+    buttonsContainer.className = 'prompt-buttons';
 
     // Save button
     const saveButton = document.createElement('button');
@@ -593,7 +598,6 @@ function displayEditForm(container, prompt, index) {
         cancelInlineEdit();
     });
     buttonsContainer.appendChild(cancelButton);
-
 
     editArticle.appendChild(buttonsContainer);
     container.appendChild(editArticle);
@@ -707,7 +711,7 @@ function displayAddForm(container) {
 
     // Buttons container
     const buttonsContainer = document.createElement('div');
-    buttonsContainer.className = 'button-with-status';
+    buttonsContainer.className = 'prompt-buttons';
 
     // Save button
     const saveButton = document.createElement('button');

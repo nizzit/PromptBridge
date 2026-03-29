@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.1] - 2026-03-29
+
+### Fixed
+- Edit/Delete and Save/Cancel buttons in prompt cards now use consistent positioning and spacing
+
 ## [1.2.0] - 2026-03-29
 
 ### Added
