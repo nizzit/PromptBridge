@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="ThemeConfig" format=3 uid="uid://dvnj26esb5x4m"]
+
+[ext_resource type="Script" uid="uid://bq0wula52vh8k" path="res://style/theme_config.gd" id="1_config"]
+
+[resource]
+script = ExtResource("1_config")

@@ -1,0 +1,306 @@
+[gd_scene load_steps=5 format=3 uid="uid://dt1vtflb4ddxh"]
+
+[ext_resource type="Script" uid="uid://sovtgq2fyrd2" path="res://control.gd" id="1_0fbet"]
+[ext_resource type="StyleBox" uid="uid://cn8hsvifuohj7" path="res://style/control.tres" id="2_62e2m"]
+[ext_resource type="Theme" path="res://style/main_theme.tres" id="3_theme"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0fbet"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 40
+corner_radius_top_right = 40
+corner_radius_bottom_right = 40
+corner_radius_bottom_left = 40
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_theme")
+script = ExtResource("1_0fbet")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("2_62e2m")
+
+[node name="MarginContainer" type="MarginContainer" parent="Background"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 250
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 50
+
+[node name="MainView" type="VBoxContainer" parent="Background/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Header" type="HBoxContainer" parent="Background/MarginContainer/MainView"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Background/MarginContainer/MainView/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "PromptBridge"
+
+[node name="MenuButton" type="Button" parent="Background/MarginContainer/MainView/Header"]
+layout_mode = 2
+text = "SETTINGS"
+
+[node name="Content" type="Panel" parent="Background/MarginContainer/MainView"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_0fbet")
+
+[node name="ContentPlaceholderMargin" type="MarginContainer" parent="Background/MarginContainer/MainView/Content"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="PlaceholderText" type="RichTextLabel" parent="Background/MarginContainer/MainView/Content/ContentPlaceholderMargin"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0, 0, 0, 0.3137255)
+text = "Share text to this app to start..."
+fit_content = true
+
+[node name="ContentTextMargin" type="MarginContainer" parent="Background/MarginContainer/MainView/Content"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="ContentText" type="RichTextLabel" parent="Background/MarginContainer/MainView/Content/ContentTextMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/default_color = Color(0, 0, 0, 1)
+
+[node name="PromptsLabel" type="Label" parent="Background/MarginContainer/MainView"]
+layout_mode = 2
+text = "Select Prompt:"
+
+[node name="PromptListScroll" type="ScrollContainer" parent="Background/MarginContainer/MainView"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PromptList" type="VBoxContainer" parent="Background/MarginContainer/MainView/PromptListScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Settings" type="Panel" parent="Background/MarginContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_62e2m")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Background/MarginContainer/Settings"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Header" type="HBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Settings"
+
+[node name="CloseSettingsButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/Header"]
+layout_mode = 2
+text = "CLOSE"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Background/MarginContainer/Settings/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SettingsContent" type="VBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LabelUrl" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+layout_mode = 2
+text = "API URL"
+
+[node name="ApiUrlInput" type="LineEdit" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "https://api.openai.com/v1"
+
+[node name="LabelToken" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+layout_mode = 2
+text = "API Token"
+
+[node name="ApiTokenInput" type="LineEdit" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+unique_name_in_owner = true
+layout_mode = 2
+secret = true
+
+[node name="LabelModel" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+layout_mode = 2
+text = "Model Name"
+
+[node name="ModelInput" type="LineEdit" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "gpt-3.5-turbo"
+
+[node name="HSeparator" type="HSeparator" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="PromptsHeader" type="HBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Prompts"
+
+[node name="AddPromptButton" type="Button" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader"]
+layout_mode = 2
+text = "ADD PROMPT"
+
+[node name="PromptsContainer" type="VBoxContainer" parent="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PromptEditor" type="Panel" parent="Background/MarginContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_62e2m")
+
+[node name="VBox" type="VBoxContainer" parent="Background/MarginContainer/PromptEditor"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Background/MarginContainer/PromptEditor/VBox"]
+layout_mode = 2
+text = "Edit Prompt"
+
+[node name="NameInput" type="LineEdit" parent="Background/MarginContainer/PromptEditor/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Prompt Name"
+
+[node name="ContentInput" type="TextEdit" parent="Background/MarginContainer/PromptEditor/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+placeholder_text = "Prompt Text"
+wrap_mode = 1
+
+[node name="PromptModelInput" type="LineEdit" parent="Background/MarginContainer/PromptEditor/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Model (Optional)"
+
+[node name="Buttons" type="HBoxContainer" parent="Background/MarginContainer/PromptEditor/VBox"]
+layout_mode = 2
+
+[node name="CancelButton" type="Button" parent="Background/MarginContainer/PromptEditor/VBox/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CANCEL"
+
+[node name="SaveButton" type="Button" parent="Background/MarginContainer/PromptEditor/VBox/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SAVE"
+
+[node name="ResultView" type="Panel" parent="Background/MarginContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_62e2m")
+
+[node name="VBox" type="VBoxContainer" parent="Background/MarginContainer/ResultView"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Header" type="HBoxContainer" parent="Background/MarginContainer/ResultView/VBox"]
+layout_mode = 2
+
+[node name="BackResultButton" type="Button" parent="Background/MarginContainer/ResultView/VBox/Header"]
+layout_mode = 2
+text = "BACK"
+
+[node name="Title" type="Label" parent="Background/MarginContainer/ResultView/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Result"
+horizontal_alignment = 2
+
+[node name="ResultText" type="RichTextLabel" parent="Background/MarginContainer/ResultView/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 2
+context_menu_enabled = true
+selection_enabled = true
+
+[node name="Buttons" type="HBoxContainer" parent="Background/MarginContainer/ResultView/VBox"]
+layout_mode = 2
+
+[node name="CopyButton" type="Button" parent="Background/MarginContainer/ResultView/VBox/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "COPY"
+
+[node name="ShareButton" type="Button" parent="Background/MarginContainer/ResultView/VBox/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SHARE"
+
+[connection signal="pressed" from="Background/MarginContainer/MainView/Header/MenuButton" to="." method="_on_menu_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/Header/CloseSettingsButton" to="." method="_on_close_settings_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/Settings/VBoxContainer/ScrollContainer/SettingsContent/PromptsHeader/AddPromptButton" to="." method="_on_add_prompt_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/CancelButton" to="." method="_on_prompt_cancel_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/PromptEditor/VBox/Buttons/SaveButton" to="." method="_on_prompt_save_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/ResultView/VBox/Header/BackResultButton" to="." method="_on_result_back_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/ResultView/VBox/Buttons/CopyButton" to="." method="_on_copy_button_pressed"]
+[connection signal="pressed" from="Background/MarginContainer/ResultView/VBox/Buttons/ShareButton" to="." method="_on_share_button_pressed"]
